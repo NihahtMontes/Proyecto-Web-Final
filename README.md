@@ -1,8 +1,111 @@
-# 📘 README — Hotel Booking System
+# 📘 README — ByteHotel — Sistema de Reservas Hoteleras
+
+> **Grupo:** ByteHotel  
+> **Integrantes:** Alejandro, Erick, Alex  
+> **Stack:** React + Vite + Tailwind | Node + Express | MongoDB
 
 ---
 
-## GUÍA TÉCNICA COMPLETA
+## 👥 ROLES DEL SISTEMA
+
+Cada rol tiene funcionalidades específicas. Las rutas protegidas del frontend y los middlewares del backend (`protect` + `authorize`) garantizan que cada usuario solo acceda a lo que le corresponde.
+
+### 🧑 Cliente
+
+| Funcionalidad | Descripción |
+|---|---|
+| Registro / Login | Crear cuenta (nombre, email, password) e iniciar sesión con JWT |
+| Ver habitaciones | Explorar catálogo con filtros por tipo, precio y capacidad |
+| Ver detalle de habitación | Galería de imágenes, servicios incluidos, precio por noche |
+| Buscar disponibilidad | Seleccionar fechas (check-in / check-out) y ver habitaciones disponibles sin solapamiento |
+| Crear reserva | Elegir habitación, fechas, servicios adicionales, método de pago. Cálculo automático de noches, subtotal, servicios extra y total |
+| Ver mis reservas | Historial completo de reservas con estado (pendiente, confirmada, en_curso, completada, cancelada) |
+| Cancelar reserva | Cancelar solo reservas en estado "pendiente" |
+| Pagar reserva | Escanear QR Simple (BCB), pagar vía Tigo Money, transferencia bancaria o efectivo en recepción |
+| Calificar estadía | Al completar una reserva: puntuación 1-5 estrellas + comentario (máximo 1 review por reserva) |
+| Editar perfil | Cambiar nombre y teléfono. Cambiar contraseña |
+
+### 🧹 Empleado
+
+| Funcionalidad | Descripción |
+|---|---|
+| Iniciar sesión | Acceso con JWT, rol verificado por middleware |
+| Ver mis tareas | Lista de tareas de limpieza asignadas, con número de habitación y tipo |
+| Iniciar limpieza | Cambia el estado de la tarea a "en_progreso" y registra hora de inicio |
+| Completar limpieza | Cambia el estado de la tarea a "completada", registra hora de fin y marca la habitación como "disponible" |
+| Historial de tareas | Ver todas las tareas completadas previamente |
+
+### 🛡️ Admin
+
+| Funcionalidad | Descripción |
+|---|---|
+| Dashboard | Métricas en tiempo real: % ocupación, ingresos del mes, reservas activas, calificación promedio |
+| Gráficos | Ocupación por tipo de habitación (dona), ingresos mensuales (barras), top 5 habitaciones (barras horizontales) |
+| CRUD Habitaciones | Crear, editar, eliminar habitaciones. Cambiar estado manualmente |
+| CRUD Usuarios | Crear usuarios (clientes/empleados/admins), listar, eliminar |
+| CRUD Servicios | Crear, editar, eliminar servicios adicionales (WiFi, desayuno, spa, etc.) |
+| Gestionar reservas | Ver todas las reservas, filtrar por estado, cambiar estado manualmente |
+| Gestionar limpieza | Ver todas las tareas, asignar tareas a empleados (solo cuando la habitación está "sucia") |
+| Gestión de pagos | Ver todos los pagos, confirmar pagos manuales (transferencia/efectivo/Tigo Money), verificar pagos QR |
+
+---
+
+## 💳 INTEGRACIÓN DE PAGOS — SOLUCIÓN REAL PARA BOLIVIA
+
+> **IMPORTANTE:** No es una simulación. Son métodos de cobro funcionales en Bolivia hoy.
+
+### Métodos de pago implementados
+
+| Método | Tipo | ¿Cómo funciona? | Comisión | Implementación |
+|---|---|---|---|---|
+| **QR Simple (BCB)** | QR bancario | El sistema genera un QR con el monto exacto. El cliente escanea con la app de su banco (BNB, Unión, Mercantil, BCP, etc.) y paga al instante. El admin verifica la acreditación en la cuenta bancaria del hotel. | **0%** (gratis) | `POST /api/payments/generate-qr` genera QR dinámico. El admin confirma con `POST /api/payments/verify/:id` |
+| **Tigo Money** | Billetera móvil | El cliente transfiere al número Tigo Money del hotel. El sistema muestra el número y el monto exacto. El admin confirma cuando recibe la notificación. | ~2% | `POST /api/payments/tigo-money` registra intención de pago. El admin confirma manualmente con `POST /api/payments/verify/:id` |
+| **Transferencia bancaria** | Transferencia | Se muestran los datos reales de la cuenta bancaria del hotel (banco, NIT, número de cuenta, titular). El cliente sube comprobante (opcional). El admin verifica y confirma. | 0% | Datos bancarios en variables de entorno. Subida de comprobante vía Cloudinary. |
+| **Efectivo** | Pago en recepción | El cliente elige pagar al llegar al hotel. La reserva queda en estado "pendiente" hasta que el admin confirme el pago en recepción. | 0% | Sin integración técnica. El admin marca como pagado manualmente. |
+
+### Flujo de pago real
+
+```
+1. Cliente crea reserva → estado: "pendiente"
+2. Cliente elige método de pago:
+   ├── QR Simple → Se genera QR con monto → Cliente escanea y paga
+   ├── Tigo Money → Se muestra nro. Tigo Money → Cliente transfiere
+   ├── Transferencia → Se muestran datos bancarios → Cliente transfiere
+   └── Efectivo → Se informa "Pagar en recepción"
+3. Sistema crea registro Payment { booking, method, amount, status: "pendiente" }
+4. Admin verifica pago:
+   ├── QR Simple: Revisa extracto bancario → confirma
+   ├── Tigo Money: Revisa app Tigo Money → confirma
+   ├── Transferencia: Revisa extracto + comprobante → confirma
+   └── Efectivo: Cobra en recepción → confirma
+5. Admin confirma: POST /api/payments/verify/:id → Payment.status = "completado"
+6. Booking.status cambia a "confirmada"
+7. Se envía email de confirmación al cliente
+```
+
+### Variables de entorno necesarias (server/.env)
+
+```env
+# === DATOS BANCARIOS PARA QR SIMPLE (BCB) ===
+BANK_NAME=Banco Mercantil Santa Cruz
+BANK_ACCOUNT_NUMBER=4012345678
+BANK_ACCOUNT_HOLDER=ByteHotel S.R.L.
+BANK_NIT=123456789012
+
+# === TIGO MONEY ===
+TIGO_MONEY_NUMBER=76012345
+TIGO_MONEY_HOLDER=ByteHotel
+
+# === DATOS PARA TRANSFERENCIA ===
+TRANSFER_BANK_NAME=Banco Mercantil Santa Cruz
+TRANSFER_ACCOUNT_NUMBER=4012345678
+TRANSFER_ACCOUNT_HOLDER=ByteHotel S.R.L.
+TRANSFER_NIT=123456789012
+```
+
+---
+
+## 🧩 DIVISIÓN DEL TRABAJO EN 3 PERSONAS
 
 ---
 
@@ -74,6 +177,7 @@ booking-hotel/
 │   │   ├── Booking.js
 │   │   ├── Service.js
 │   │   ├── Review.js
+│   │   ├── Payment.js
 │   │   └── CleaningTask.js
 │   ├── routes/
 │   │   ├── auth.routes.js
@@ -82,6 +186,7 @@ booking-hotel/
 │   │   ├── cleaning.routes.js
 │   │   ├── user.routes.js
 │   │   ├── service.routes.js
+│   │   ├── payment.routes.js
 │   │   └── dashboard.routes.js
 │   ├── controllers/
 │   │   ├── auth.controller.js
@@ -90,6 +195,7 @@ booking-hotel/
 │   │   ├── cleaning.controller.js
 │   │   ├── user.controller.js
 │   │   ├── service.controller.js
+│   │   ├── payment.controller.js
 │   │   └── dashboard.controller.js
 │   ├── middleware/
 │   │   ├── auth.middleware.js
@@ -97,7 +203,8 @@ booking-hotel/
 │   ├── utils/
 │   │   ├── email.js
 │   │   ├── bookingApi.js
-│   │   └── cloudinary.js
+│   │   ├── cloudinary.js
+│   │   └── qrGenerator.js
 │   ├── index.js
 │   └── package.json
 ├── .gitignore
@@ -118,7 +225,7 @@ npm init -y
 # Instalar dependencias del servidor
 cd server
 npm init -y
-npm install express mongoose dotenv cors bcryptjs jsonwebtoken nodemailer cloudinary multer node-cron axios
+npm install express mongoose dotenv cors bcryptjs jsonwebtoken nodemailer cloudinary multer node-cron axios qrcode
 npm install -D nodemon
 
 cd ..
@@ -181,6 +288,22 @@ CLOUDINARY_API_SECRET=
 RAPIDAPI_KEY=
 EMAIL_USER=
 EMAIL_PASS=
+
+# === DATOS BANCARIOS PARA QR SIMPLE (BCB) ===
+BANK_NAME=Banco Mercantil Santa Cruz
+BANK_ACCOUNT_NUMBER=4012345678
+BANK_ACCOUNT_HOLDER=ByteHotel S.R.L.
+BANK_NIT=123456789012
+
+# === TIGO MONEY ===
+TIGO_MONEY_NUMBER=76012345
+TIGO_MONEY_HOLDER=ByteHotel
+
+# === DATOS PARA TRANSFERENCIA BANCARIA ===
+TRANSFER_BANK_NAME=Banco Mercantil Santa Cruz
+TRANSFER_ACCOUNT_NUMBER=4012345678
+TRANSFER_ACCOUNT_HOLDER=ByteHotel S.R.L.
+TRANSFER_NIT=123456789012
 ```
 
 #### Paso 7 — Configurar scripts en el package.json raíz
@@ -225,6 +348,7 @@ npm install concurrently -D
 | `server/models/Booking.js` | Modelo de reserva |
 | `server/models/Service.js` | Modelo de servicio |
 | `server/models/Review.js` | Modelo de calificación |
+| `server/models/Payment.js` | Modelo de pagos |
 | `server/models/CleaningTask.js` | Modelo de tarea de limpieza |
 | `server/routes/auth.routes.js` | Rutas de autenticación |
 | `server/controllers/auth.controller.js` | Lógica de registro/login |
@@ -329,7 +453,7 @@ Campos obligatorios:
 - `totalPrice`: Number, requerido
 - `services`: [{ service: ObjectId, ref 'Service', quantity: Number }]
 - `status`: String, enum `['pendiente', 'confirmada', 'en_curso', 'completada', 'cancelada']`, default `'pendiente'`
-- `paymentMethod`: String, enum `['tarjeta', 'efectivo', 'transferencia']`, requerido
+- `paymentMethod`: String, enum `['qr_simple', 'tigo_money', 'transferencia', 'efectivo']`, requerido
 - `createdAt`: Date, default Date.now
 
 ---
@@ -369,7 +493,23 @@ Campos obligatorios:
 
 ---
 
-**9. `server/middleware/auth.middleware.js`**
+**9. `server/models/Payment.js`**
+
+Campos obligatorios:
+- `booking`: ObjectId, ref 'Booking', requerido
+- `method`: String, enum `['qr_simple', 'tigo_money', 'transferencia', 'efectivo']`, requerido
+- `amount`: Number, requerido
+- `currency`: String, default `'BOB'`
+- `status`: String, enum `['pendiente', 'completado', 'fallido']`, default `'pendiente'`
+- `transactionId`: String (referencia externa o ID de transacción)
+- `comprobante`: String (URL de Cloudinary, opcional para transferencia)
+- `verifiedBy`: ObjectId, ref 'User' (admin que confirmó el pago)
+- `verifiedAt`: Date
+- `createdAt`: Date, default Date.now
+
+---
+
+**10. `server/middleware/auth.middleware.js`**
 
 Dos middlewares exportados:
 
@@ -379,7 +519,7 @@ Dos middlewares exportados:
 
 ---
 
-**10. `server/controllers/auth.controller.js`**
+**11. `server/controllers/auth.controller.js`**
 
 Funciones exportadas:
 
@@ -393,7 +533,7 @@ Token JWT se genera con `jwt.sign({ id: user._id, role: user.role }, secret, { e
 
 ---
 
-**11. `server/routes/auth.routes.js`**
+**12. `server/routes/auth.routes.js`**
 
 ```js
 const express = require('express');
@@ -410,7 +550,7 @@ module.exports = router;
 
 ---
 
-**12. `server/index.js`**
+**13. `server/index.js`**
 
 Debe:
 1. Cargar dotenv
@@ -422,11 +562,11 @@ Debe:
 7. Escuchar en `process.env.PORT`
 8. Un placeholder comentado `// app.use('/api/rooms', roomRoutes)` que Erick descomentará
 9. Un placeholder comentado `// app.use('/api/bookings', bookingRoutes)` que Erick descomentará
-10. Igual para cleaning, users, services, dashboard
+10. Igual para cleaning, users, services, payments, dashboard
 
 ---
 
-**13. `package.json` raíz — Scripts**
+**14. `package.json` raíz — Scripts**
 
 ```json
 {
@@ -442,7 +582,7 @@ Debe:
 
 ---
 
-**14. `client/vite.config.js`**
+**15. `client/vite.config.js`**
 
 ```js
 import { defineConfig } from 'vite'
@@ -465,7 +605,7 @@ export default defineConfig({
 **Orden de trabajo de Alejandro:**
 1. Crear estructura de carpetas y archivos vacíos
 2. `config/db.js` y `config/env.js`
-3. Los 6 modelos (User, Room, Booking, Service, Review, CleaningTask) en ese orden
+3. Los 7 modelos (User, Room, Booking, Service, Review, Payment, CleaningTask) en ese orden
 4. `middleware/auth.middleware.js`
 5. `controllers/auth.controller.js` + `routes/auth.routes.js`
 6. `server/index.js` (montar solo auth, dejar placeholders para Erick)
@@ -491,15 +631,18 @@ export default defineConfig({
 | `server/controllers/user.controller.js` | CRUD usuarios (solo admin) |
 | `server/controllers/service.controller.js` | CRUD servicios adicionales |
 | `server/controllers/dashboard.controller.js` | Métricas y estadísticas |
+| `server/controllers/payment.controller.js` | QR Simple, Tigo Money, verificar pagos |
 | `server/routes/room.routes.js` | Rutas de habitaciones |
 | `server/routes/booking.routes.js` | Rutas de reservas |
 | `server/routes/cleaning.routes.js` | Rutas de limpieza |
 | `server/routes/user.routes.js` | Rutas de usuarios |
 | `server/routes/service.routes.js` | Rutas de servicios |
+| `server/routes/payment.routes.js` | Rutas de pagos |
 | `server/routes/dashboard.routes.js` | Rutas de dashboard |
 | `server/utils/email.js` | Nodemailer: envío de correos |
 | `server/utils/bookingApi.js` | Booking.com RapidAPI |
 | `server/utils/cloudinary.js` | Subida de imágenes a Cloudinary |
+| `server/utils/qrGenerator.js` | Generación de QR Simple (BCB) |
 | `server/middleware/upload.middleware.js` | Multer para Cloudinary |
 | `server/index.js` | Descomentar y montar todas las rutas |
 
@@ -631,7 +774,75 @@ Funciones (todas requieren admin):
 
 ---
 
-**7. Archivos de rutas (7 archivos)**
+**7. `server/controllers/payment.controller.js`**
+
+Funciones:
+
+`generateQR` (POST cliente autenticado):
+1. Recibe: bookingId
+2. Busca el booking y verifica que pertenezca a req.user
+3. Crea registro Payment con method 'qr_simple', amount = booking.totalPrice, status 'pendiente'
+4. Genera QR Simple con los datos bancarios del .env + monto. El QR sigue el formato BCB: `BCB|NIT|FACTURA|AUTORIZACION|FECHA|MONTO|TOTAL|HASH`
+5. Devuelve { payment, qrCode: "<datos para renderizar QR>" }
+
+`registerTigoMoney` (POST cliente autenticado):
+1. Recibe: bookingId
+2. Busca booking, verifica pertenencia
+3. Crea registro Payment con method 'tigo_money', amount = booking.totalPrice, status 'pendiente'
+4. Devuelve { payment, tigoData: { number, holder, amount, concepto } }
+
+`uploadComprobante` (POST cliente autenticado):
+1. Recibe: paymentId + archivo de imagen (multer)
+2. Verifica que el payment pertenezca al usuario (vía booking.user)
+3. Sube imagen a Cloudinary (usar util/cloudinary.js)
+4. Guarda URL en payment.comprobante
+5. Devuelve payment actualizado
+
+`getMyPayments` (GET cliente autenticado): Busca todos los pagos del usuario (vía bookings). Popula booking.
+
+`getAllPayments` (GET admin): Lista todos los pagos. Popula booking (user, room). Soporta filtro `?status=` y `?method=`.
+
+`verifyPayment` (POST admin):
+1. Recibe: paymentId
+2. Busca payment, verifica que status sea 'pendiente'
+3. Cambia payment.status a 'completado', guarda verifiedBy = req.user._id, verifiedAt = Date.now()
+4. Cambia booking.status de 'pendiente' a 'confirmada'
+5. Envía email de confirmación al cliente
+6. Devuelve payment actualizado
+
+`getPaymentById` (GET admin): Busca payment por ID con populate.
+
+---
+
+**8. `server/utils/qrGenerator.js`**
+
+Usar librería `qrcode` para generar QR Simple (BCB):
+
+```js
+const QRCode = require('qrcode');
+
+const generateBCBQR = async (paymentData) => {
+  const qrText = [
+    'BCB',
+    process.env.BANK_NIT,
+    paymentData.bookingId,
+    paymentData.amount.toFixed(2),
+    new Date().toISOString().split('T')[0],
+    process.env.BANK_ACCOUNT_NUMBER,
+    process.env.BANK_ACCOUNT_HOLDER,
+    'BOB'
+  ].join('|');
+
+  const qrDataURL = await QRCode.toDataURL(qrText);
+  return { qrText, qrDataURL };
+};
+
+module.exports = { generateBCBQR };
+```
+
+---
+
+**9. Archivos de rutas (8 archivos)**
 
 Cada archivo de ruta debe seguir este patrón:
 
@@ -714,9 +925,20 @@ module.exports = router;
 | GET | `/revenue` | protect, authorize('admin') | getRevenueData |
 | GET | `/top-rooms` | protect, authorize('admin') | getTopRooms |
 
+##### payment.routes.js
+| Método | Ruta | Middleware | Controlador |
+|---|---|---|---|
+| POST | `/generate-qr` | protect, authorize('cliente') | generateQR |
+| POST | `/tigo-money` | protect, authorize('cliente') | registerTigoMoney |
+| POST | `/:id/comprobante` | protect, authorize('cliente'), upload | uploadComprobante |
+| GET | `/me` | protect, authorize('cliente') | getMyPayments |
+| GET | `/` | protect, authorize('admin') | getAllPayments |
+| GET | `/:id` | protect, authorize('admin') | getPaymentById |
+| POST | `/:id/verify` | protect, authorize('admin') | verifyPayment |
+
 ---
 
-**8. `server/utils/email.js`**
+**10. `server/utils/email.js`**
 
 Usar Nodemailer con transporter (Gmail o servicio que prefieran). Exportar funciones:
 
@@ -727,7 +949,7 @@ Usar Nodemailer con transporter (Gmail o servicio que prefieran). Exportar funci
 
 ---
 
-**9. `server/utils/bookingApi.js`**
+**11. `server/utils/bookingApi.js`**
 
 Usar axios para pegarle a RapidAPI (Booking.com). Exportar función:
 
@@ -735,7 +957,7 @@ Usar axios para pegarle a RapidAPI (Booking.com). Exportar función:
 
 ---
 
-**10. `server/utils/cloudinary.js`**
+**12. `server/utils/cloudinary.js`**
 
 Configurar cloudinary con las credenciales del .env. Exportar función:
 
@@ -743,13 +965,13 @@ Configurar cloudinary con las credenciales del .env. Exportar función:
 
 ---
 
-**11. `server/middleware/upload.middleware.js`**
+**13. `server/middleware/upload.middleware.js`**
 
 Configurar multer con `multer({ storage: multer.memoryStorage() })`. Exportar `upload` configurado para single file upload.
 
 ---
 
-**12. `server/index.js` — Lo que Erick debe modificar**
+**14. `server/index.js` — Lo que Erick debe modificar**
 
 Descomentar y añadir estas líneas DESPUÉS de que Alejandro las deje como placeholders:
 
@@ -760,14 +982,15 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/cleaning', cleaningRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 ```
 
-Añadir los `require` correspondientes al inicio del archivo.
+Añadir los `require` correspondientes al inicio del archivo (incluyendo `paymentRoutes`).
 
 ---
 
-**13. Tareas programadas (node-cron) en `server/index.js`**
+**15. Tareas programadas (node-cron) en `server/index.js`**
 
 Añadir al final de `index.js`:
 
@@ -797,16 +1020,18 @@ cron.schedule('2 0 * * *', async () => {
 3. `utils/email.js`
 4. `utils/bookingApi.js`
 5. `utils/cloudinary.js`
-6. `middleware/upload.middleware.js`
-7. `controllers/room.controller.js` → `routes/room.routes.js`
-8. `controllers/service.controller.js` → `routes/service.routes.js`
-9. `controllers/booking.controller.js` → `routes/booking.routes.js`
-10. `controllers/cleaning.controller.js` → `routes/cleaning.routes.js`
-11. `controllers/user.controller.js` → `routes/user.routes.js`
-12. `controllers/dashboard.controller.js` → `routes/dashboard.routes.js`
-13. Modificar `server/index.js` para montar todas las rutas + tareas cron
-14. Probar CADA endpoint con Thunder Client antes de hacer commit
-15. Commit y push. Avisar a Alex.
+6. `utils/qrGenerator.js` (requiere `npm install qrcode` en server/)
+7. `middleware/upload.middleware.js`
+8. `controllers/room.controller.js` → `routes/room.routes.js`
+9. `controllers/service.controller.js` → `routes/service.routes.js`
+10. `controllers/booking.controller.js` → `routes/booking.routes.js`
+11. `controllers/cleaning.controller.js` → `routes/cleaning.routes.js`
+12. `controllers/user.controller.js` → `routes/user.routes.js`
+13. `controllers/payment.controller.js` → `routes/payment.routes.js`
+14. `controllers/dashboard.controller.js` → `routes/dashboard.routes.js`
+15. Modificar `server/index.js` para montar todas las rutas (incluyendo payment) + tareas cron
+16. Probar CADA endpoint con Thunder Client antes de hacer commit
+17. Commit y push. Avisar a Alex.
 
 ---
 
@@ -913,6 +1138,15 @@ export const dashboardAPI = {
   getRevenue: () => api.get('/dashboard/revenue'),
   getTopRooms: () => api.get('/dashboard/top-rooms'),
 };
+
+export const paymentAPI = {
+  generateQR: (data) => api.post('/payments/generate-qr', data),
+  registerTigoMoney: (data) => api.post('/payments/tigo-money', data),
+  uploadComprobante: (id, data) => api.post(`/payments/${id}/comprobante`, data),
+  getMyPayments: () => api.get('/payments/me'),
+  getAll: (params) => api.get('/payments', { params }),
+  verify: (id) => api.post(`/payments/${id}/verify`),
+};
 ```
 
 ---
@@ -939,7 +1173,7 @@ Barra de navegación responsiva con Tailwind:
   - No autenticado: Home, Habitaciones, Login, Register
   - Cliente: Home, Habitaciones, Mis Reservas, Perfil, Logout
   - Empleado: Panel Limpieza, Logout
-  - Admin: Dashboard, Habitaciones, Usuarios, Servicios, Logout
+  - Admin: Dashboard, Habitaciones, Reservas, Usuarios, Servicios, Limpieza, Pagos, Logout
 - Menú hamburguesa en móvil
 - Indicador visual del rol activo
 
@@ -1054,10 +1288,14 @@ Esta es la página MÁS importante del flujo de reserva. Muestra:
 2. **Fechas seleccionadas** — Check-in, check-out, noches totales
 3. **Precio base** — habitación × noches
 4. **Servicios adicionales** — Checkboxes con nombre, descripción, precio. Al marcar, se suma al total.
-5. **Total a pagar** — Grande y destacado
-6. **Selección de método de pago** — Radio buttons: Tarjeta, Efectivo, Transferencia
-7. **Simulación de pago**: Si elige tarjeta, mostrar campos de tarjeta (número, fecha, CVV — todo ficticio, no se guarda). Si es efectivo, mostrar mensaje "Pagar en recepción". Si transferencia, mostrar datos bancarios ficticios.
-8. **Botón "Confirmar Reserva"** — Llama a bookingAPI.create(). Toast de éxito. Redirige a /mis-reservas.
+5. **Total a pagar** — Grande y destacado (en Bs.)
+6. **Selección de método de pago** (REAL — no simulación):
+   - Radio buttons: QR Simple (BCB), Tigo Money, Transferencia Bancaria, Efectivo
+   - **QR Simple**: Radio button + al seleccionar → llama a `POST /api/payments/generate-qr` → muestra QR generado dinámicamente con el monto exacto. El cliente escanea con la app de su banco (BNB, Unión, Mercantil, BCP, etc.). Se muestra texto: "Escanee este QR con la app de su banco. El pago se acreditará en la cuenta de ByteHotel."
+   - **Tigo Money**: Radio button + al seleccionar → muestra número Tigo Money del hotel (desde .env), monto exacto e instrucciones: "Transfiera Bs. [monto] al número [TIGO_MONEY_NUMBER]. En el concepto escriba su número de reserva."
+   - **Transferencia bancaria**: Radio button + al seleccionar → muestra datos bancarios reales (banco, NIT, número de cuenta, titular) desde variables de entorno. Opción de subir comprobante (Cloudinary).
+   - **Efectivo**: Radio button + al seleccionar → muestra mensaje "Puede pagar en efectivo al llegar a la recepción del hotel. Su reserva será confirmada una vez realizado el pago."
+7. **Botón "Confirmar Reserva"** — Llama a bookingAPI.create() con los datos de la reserva y método de pago seleccionado. Luego llama a paymentAPI.generateQR() o paymentAPI.registerTigoMoney() según corresponda. Toast de éxito. Redirige a /mis-reservas.
 
 Recibe roomId, checkIn, checkOut por query params o location state.
 
@@ -1145,7 +1383,21 @@ Tabla de TODAS las reservas. Columnas: Cliente, Habitación, Check-in, Check-out
 
 ---
 
-**27. `client/src/App.jsx`**
+**27. `client/src/pages/admin/AdminPaymentsPage.jsx`**
+
+- Tabla de todos los pagos
+- Columnas: ID Reserva, Cliente, Método (badge: QR Simple=verde, Tigo Money=azul, Transferencia=amarillo, Efectivo=gris), Monto (Bs.), Estado (badge: pendiente=naranja, completado=verde, fallido=rojo), Fecha
+- Filtros por método de pago y estado
+- Botón "Verificar pago" en filas con estado pendiente → modal con detalle del pago:
+  - Si QR Simple: muestra monto, fecha y botón "Confirmar pago"
+  - Si Tigo Money: muestra número Tigo Money, monto y botón "Confirmar pago"
+  - Si Transferencia: muestra datos bancarios, comprobante (imagen si existe) y botón "Confirmar pago"
+  - Si Efectivo: botón "Confirmar cobro en recepción"
+- Al confirmar: llama a paymentAPI.verify(id) → toast éxito → actualiza tabla
+
+---
+
+**28. `client/src/App.jsx`**
 
 ```jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -1169,6 +1421,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminServicesPage from './pages/admin/AdminServicesPage';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage';
 import AdminCleaningPage from './pages/admin/AdminCleaningPage';
+import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
 
 function App() {
   return (
@@ -1238,6 +1491,11 @@ function App() {
                 <AdminCleaningPage />
               </ProtectedRoute>
             } />
+            <Route path="/admin/pagos" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminPaymentsPage />
+              </ProtectedRoute>
+            } />
           </Routes>
         </Layout>
       </BrowserRouter>
@@ -1301,7 +1559,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 11. `components/ui/RoomCard.jsx`, `BookingCard.jsx`
 12. Páginas cliente: BookingConfirmPage, MyBookingsPage, ProfilePage
 13. Página empleado: CleaningPanelPage
-14. Páginas admin: DashboardPage, AdminRoomsPage, AdminUsersPage, AdminServicesPage, AdminBookingsPage, AdminCleaningPage
+14. Páginas admin: DashboardPage, AdminRoomsPage, AdminUsersPage, AdminServicesPage, AdminBookingsPage, AdminCleaningPage, AdminPaymentsPage
 15. Probar navegación completa con datos mock primero
 16. Conectar con API real cuando Erick termine
 17. Commit y push
@@ -1314,7 +1572,9 @@ Cuando los 3 hayan terminado, hacer juntos:
 
 - [ ] `npm run install-all` en la raíz
 - [ ] Verificar que `npm run dev` levanta server en 5000 y client en 5173
-- [ ] Probar flujo completo: registro → login → ver habitaciones → reservar → pagar
+- [ ] Probar flujo completo: registro → login → ver habitaciones → reservar → pagar (QR Simple / Tigo Money / Transferencia / Efectivo)
+- [ ] Verificar generación de QR Simple con monto correcto
+- [ ] Verificar flujo de confirmación de pago (admin verifica → booking cambia a confirmada)
 - [ ] Probar panel empleado: login empleado → ver tareas → iniciar → completar
 - [ ] Probar panel admin: login admin → ver dashboard → crear habitación → asignar limpieza
 - [ ] Verificar que los gráficos cargan datos reales
