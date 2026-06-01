@@ -6,6 +6,83 @@
 
 ---
 
+## 📑 ÍNDICE DE NAVEGACIÓN
+
+| # | Sección | Descripción |
+|---|---|---|
+| 1 | [Sobre este Documento](#-sobre-este-documento) | Propósito de esta guía y cómo usarla |
+| 2 | [Pautas de Coordinación](#-pautas-de-coordinación) | Propiedad de archivos y reglas del equipo |
+| 3 | [Roles del Sistema](#-roles-del-sistema) | Funcionalidades de Cliente, Empleado y Admin |
+| 4 | [Pagos — Solución Bolivia](#-pagos--solución-bolivia) | QR Simple, Tigo Money, Transferencia, Efectivo |
+| 5 | [Requisitos y Configuración Inicial](#-requisitos-y-configuración-inicial) | Instalación, setup y estructura de carpetas |
+| 6 | [Estructura del Proyecto](#-estructura-del-proyecto) | Árbol completo de carpetas y archivos |
+| 7 | [Alejandro — Backend Fundación](#-alejandro--backend-fundación) | Modelos, Auth, Config, Server Core |
+| 8 | [Erick — Backend API](#-erick--backend-api) | Controladores, Rutas, Utils, Integraciones |
+| 9 | [Alex — Frontend](#-alex--frontend) | Componentes, Páginas, Context, Servicios |
+| 10 | [Checklist de Integración](#-checklist-de-integración) | Verificación final antes de la entrega |
+| 11 | [Reglas de Oro](#-reglas-de-oro) | Normas inviolables del equipo |
+
+---
+
+<a id="-sobre-este-documento"></a>
+## 📌 SOBRE ESTE DOCUMENTO
+
+Este README es la **guía técnica completa** del proyecto ByteHotel. Su propósito es que cada integrante sepa exactamente qué hacer, en qué orden y sin pisar el trabajo de los demás.
+
+**¿Qué contiene?**
+- **Pautas de coordinación** → qué archivos son de cada uno y con quién coordinar antes de tocar algo ajeno.
+- **Roles del sistema** → funcionalidades detalladas de cliente, empleado y administrador.
+- **Solución de pagos real** → integración con QR Simple (BCB), Tigo Money, transferencia y efectivo para Bolivia.
+- **Configuración inicial** → instalación paso a paso de dependencias, variables de entorno y estructura.
+- **Instrucciones por integrante** → cada sección contiene una tabla de archivos asignados con enlaces directos y el paso a paso detallado.
+- **Checklist y reglas** → verificación final y normas que nadie debe romper.
+
+> **Cómo usar esta guía:** Empezá por las [Pautas de Coordinación](#-pautas-de-coordinación), luego andá a tu sección asignada usando el índice de arriba. Cada sección tiene su propio sub-índice con enlaces a las instrucciones detalladas de cada archivo.
+
+---
+
+<a id="-pautas-de-coordinación"></a>
+## ⚠️ PAUTAS DE COORDINACIÓN
+
+### Propiedad de archivos
+
+Cada archivo tiene un **dueño**. Si necesitás modificar un archivo que no es tuyo, coordiná con el dueño antes de tocarlo.
+
+| Carpeta / Archivo | Dueño | Si otro necesita cambiarlo... |
+|---|---|---|
+| `server/models/*` | Alejandro | Coordinar con Alejandro |
+| `server/config/*` | Alejandro | Coordinar con Alejandro |
+| `server/middleware/auth.middleware.js` | Alejandro | Coordinar con Alejandro |
+| `server/controllers/auth.controller.js` | Alejandro | Coordinar con Alejandro |
+| `server/routes/auth.routes.js` | Alejandro | Coordinar con Alejandro |
+| `client/vite.config.js` | Alejandro | Coordinar con Alejandro |
+| `client/src/index.css` | Alejandro | Coordinar con Alejandro |
+| `.gitignore` | Alejandro | Coordinar con Alejandro |
+| `package.json` (raíz) | Alejandro | Coordinar con Alejandro |
+| `server/controllers/*` (excepto auth) | Erick | Coordinar con Erick |
+| `server/routes/*` (excepto auth) | Erick | Coordinar con Erick |
+| `server/utils/*` | Erick | Coordinar con Erick |
+| `server/middleware/upload.middleware.js` | Erick | Coordinar con Erick |
+| `server/index.js` (montaje de rutas + cron) | Erick | Coordinar con Erick |
+| `client/src/*` (todo) | Alex | Coordinar con Alex |
+| `client/index.html` | Alex | Coordinar con Alex |
+| `client/package.json` | Alex | Coordinar con Alex |
+
+### Reglas del equipo
+
+| # | Regla |
+|---|---|
+| 1 | **Nadie toca archivos de otra persona sin avisar.** Si necesitás un cambio, lo pedís por el grupo. |
+| 2 | **Pull antes de push SIEMPRE.** `git pull origin main` antes de `git push`. |
+| 3 | **Commits frecuentes y pequeños.** Cada funcionalidad completada = un commit con mensaje claro. |
+| 4 | **Probar antes de pushear.** Cada quien prueba sus endpoints o páginas antes de hacer push. |
+| 5 | **El `.env` NUNCA se sube a git.** Está en `.gitignore`. Se comparte por privado. |
+| 6 | **Usar la misma versión de Node.** `node -v` debe coincidir. Usar nvm si es necesario. |
+| 7 | **Si algo falla, preguntar al grupo.** No adivinar. No hacer cambios masivos sin consultar. |
+
+---
+
+<a id="-roles-del-sistema"></a>
 ## 👥 ROLES DEL SISTEMA
 
 Cada rol tiene funcionalidades específicas. Las rutas protegidas del frontend y los middlewares del backend (`protect` + `authorize`) garantizan que cada usuario solo acceda a lo que le corresponde.
@@ -50,6 +127,7 @@ Cada rol tiene funcionalidades específicas. Las rutas protegidas del frontend y
 
 ---
 
+<a id="-pagos--solución-bolivia"></a>
 ## 💳 INTEGRACIÓN DE PAGOS — SOLUCIÓN REAL PARA BOLIVIA
 
 > **IMPORTANTE:** No es una simulación. Son métodos de cobro funcionales en Bolivia hoy.
@@ -105,9 +183,8 @@ TRANSFER_NIT=123456789012
 
 ---
 
-## 🧩 DIVISIÓN DEL TRABAJO EN 3 PERSONAS
-
----
+<a id="-requisitos-y-configuración-inicial"></a>
+## 🛠️ REQUISITOS Y CONFIGURACIÓN INICIAL
 
 ### ⚠️ ANTES DE EMPEZAR — REQUISITOS OBLIGATORIOS
 
@@ -130,6 +207,7 @@ Cada integrante debe instalar exactamente estas versiones:
 
 ---
 
+<a id="-estructura-del-proyecto"></a>
 ### 📂 ESTRUCTURA INICIAL DEL PROYECTO
 
 **Un SOLO integrante (Alejandro) crea el repositorio.** Los demás clonan.
@@ -326,11 +404,16 @@ npm install concurrently -D
 
 ---
 
-## 🧩 DIVISIÓN DEL TRABAJO EN 3 PERSONAS
+<a id="-asignación-de-trabajo"></a>
+## 🧩 ASIGNACIÓN DE TRABAJO POR INTEGRANTE
 
 ---
 
+<a id="-alejandro--backend-fundación"></a>
 ### 🟦 ALEJANDRO — BACKEND FUNDACIÓN (Server Core)
+
+> **Sub-índice de archivos asignados:**  
+> [1. db.js](#1-serverconfigdbjs) · [2. env.js](#2-serverconfigenvjs) · [3. User.js](#3-servermodelsuserjs) · [4. Room.js](#4-servermodelsroomjs) · [5. Booking.js](#5-servermodelsbookingjs) · [6. Service.js](#6-servermodelsservicejs) · [7. Review.js](#7-servermodelsreviewjs) · [8. CleaningTask.js](#8-servermodelscleaningtaskjs) · [9. Payment.js](#9-servermodelspaymentjs) · [10. auth.middleware.js](#10-servermiddlewareauthmiddlewarejs) · [11. auth.controller.js](#11-servercontrollersauthcontrollerjs) · [12. auth.routes.js](#12-serverroutesauthroutesjs) · [13. index.js](#13-serverindexjs) · [14. package.json](#14-packagejson-raiz-scripts) · [15. vite.config.js](#15-clientviteconfigjs)
 
 **Responsabilidad:** TODO lo que es la base del servidor. Sin esto, los demás no pueden avanzar. Debe terminar PRIMERO para que Erick pueda construir encima.
 
@@ -375,6 +458,7 @@ npm install concurrently -D
 
 ---
 
+<a id="1-serverconfigdbjs"></a>
 **1. `server/config/db.js`**
 
 ```js
@@ -395,6 +479,7 @@ module.exports = connectDB;
 
 ---
 
+<a id="2-serverconfigenvjs"></a>
 **2. `server/config/env.js`**
 
 ```js
@@ -410,6 +495,7 @@ module.exports = {
 
 ---
 
+<a id="3-servermodelsuserjs"></a>
 **3. `server/models/User.js`**
 
 Campos obligatorios:
@@ -426,6 +512,7 @@ Método de instancia `matchPassword(enteredPassword)` que compara con bcrypt.
 
 ---
 
+<a id="4-servermodelsroomjs"></a>
 **4. `server/models/Room.js`**
 
 Campos obligatorios:
@@ -440,6 +527,7 @@ Campos obligatorios:
 
 ---
 
+<a id="5-servermodelsbookingjs"></a>
 **5. `server/models/Booking.js`**
 
 Campos obligatorios:
@@ -458,6 +546,7 @@ Campos obligatorios:
 
 ---
 
+<a id="6-servermodelsservicejs"></a>
 **6. `server/models/Service.js`**
 
 Campos obligatorios:
@@ -468,6 +557,7 @@ Campos obligatorios:
 
 ---
 
+<a id="7-servermodelsreviewjs"></a>
 **7. `server/models/Review.js`**
 
 Campos obligatorios:
@@ -481,6 +571,7 @@ Campos obligatorios:
 
 ---
 
+<a id="8-servermodelscleaningtaskjs"></a>
 **8. `server/models/CleaningTask.js`**
 
 Campos obligatorios:
@@ -493,6 +584,7 @@ Campos obligatorios:
 
 ---
 
+<a id="9-servermodelspaymentjs"></a>
 **9. `server/models/Payment.js`**
 
 Campos obligatorios:
@@ -509,6 +601,7 @@ Campos obligatorios:
 
 ---
 
+<a id="10-servermiddlewareauthmiddlewarejs"></a>
 **10. `server/middleware/auth.middleware.js`**
 
 Dos middlewares exportados:
@@ -519,6 +612,7 @@ Dos middlewares exportados:
 
 ---
 
+<a id="11-servercontrollersauthcontrollerjs"></a>
 **11. `server/controllers/auth.controller.js`**
 
 Funciones exportadas:
@@ -533,6 +627,7 @@ Token JWT se genera con `jwt.sign({ id: user._id, role: user.role }, secret, { e
 
 ---
 
+<a id="12-serverroutesauthroutesjs"></a>
 **12. `server/routes/auth.routes.js`**
 
 ```js
@@ -550,6 +645,7 @@ module.exports = router;
 
 ---
 
+<a id="13-serverindexjs"></a>
 **13. `server/index.js`**
 
 Debe:
@@ -566,6 +662,7 @@ Debe:
 
 ---
 
+<a id="14-packagejson-raiz-scripts"></a>
 **14. `package.json` raíz — Scripts**
 
 ```json
@@ -582,6 +679,7 @@ Debe:
 
 ---
 
+<a id="15-clientviteconfigjs"></a>
 **15. `client/vite.config.js`**
 
 ```js
@@ -617,7 +715,11 @@ export default defineConfig({
 
 ---
 
+<a id="-erick--backend-api"></a>
 ### 🟩 ERICK — BACKEND API (Todos los endpoints funcionales)
+
+> **Sub-índice de archivos asignados:**  
+> [1. room.controller.js](#1-servercontrollersroomcontrollerjs) · [2. booking.controller.js](#2-servercontrollersbookingcontrollerjs) · [3. cleaning.controller.js](#3-servercontrollerscleaningcontrollerjs) · [4. user.controller.js](#4-servercontrollersusercontrollerjs) · [5. service.controller.js](#5-servercontrollersservicecontrollerjs) · [6. dashboard.controller.js](#6-servercontrollersdashboardcontrollerjs) · [7. payment.controller.js](#7-servercontrollerspaymentcontrollerjs) · [8. qrGenerator.js](#8-serverutilsqrgeneratorjs) · [9. Archivos de Rutas (8)](#9-archivos-de-rutas-8-archivos) · [10. email.js](#10-serverutilsemailjs) · [11. bookingApi.js](#11-serverutilsbookingapijs) · [12. cloudinary.js](#12-serverutilscloudinaryjs) · [13. upload.middleware.js](#13-servermiddlewareuploadmiddlewarejs) · [14. index.js](#14-serverindexjs-lo-que-erick-debe-modificar) · [15. Tareas cron](#15-tareas-programadas-node-cron-en-serverindexjs)
 
 **Responsabilidad:** TODA la lógica de negocio, todos los endpoints, integraciones externas. Empieza DESPUÉS de que Alejandro termine los modelos y el middleware de auth.
 
@@ -657,6 +759,7 @@ export default defineConfig({
 
 ---
 
+<a id="1-servercontrollersroomcontrollerjs"></a>
 **1. `server/controllers/room.controller.js`**
 
 Funciones:
@@ -677,6 +780,7 @@ Funciones:
 
 ---
 
+<a id="2-servercontrollersbookingcontrollerjs"></a>
 **2. `server/controllers/booking.controller.js`**
 
 Funciones:
@@ -707,6 +811,7 @@ Funciones:
 
 ---
 
+<a id="3-servercontrollerscleaningcontrollerjs"></a>
 **3. `server/controllers/cleaning.controller.js`**
 
 Funciones:
@@ -723,6 +828,7 @@ Funciones:
 
 ---
 
+<a id="4-servercontrollersusercontrollerjs"></a>
 **4. `server/controllers/user.controller.js`**
 
 Funciones (todas requieren admin):
@@ -735,6 +841,7 @@ Funciones (todas requieren admin):
 
 ---
 
+<a id="5-servercontrollersservicecontrollerjs"></a>
 **5. `server/controllers/service.controller.js`**
 
 Funciones:
@@ -749,6 +856,7 @@ Funciones:
 
 ---
 
+<a id="6-servercontrollersdashboardcontrollerjs"></a>
 **6. `server/controllers/dashboard.controller.js`**
 
 Funciones (todas requieren admin):
@@ -774,6 +882,7 @@ Funciones (todas requieren admin):
 
 ---
 
+<a id="7-servercontrollerspaymentcontrollerjs"></a>
 **7. `server/controllers/payment.controller.js`**
 
 Funciones:
@@ -814,6 +923,7 @@ Funciones:
 
 ---
 
+<a id="8-serverutilsqrgeneratorjs"></a>
 **8. `server/utils/qrGenerator.js`**
 
 Usar librería `qrcode` para generar QR Simple (BCB):
@@ -842,6 +952,7 @@ module.exports = { generateBCBQR };
 
 ---
 
+<a id="9-archivos-de-rutas-8-archivos"></a>
 **9. Archivos de rutas (8 archivos)**
 
 Cada archivo de ruta debe seguir este patrón:
@@ -938,6 +1049,7 @@ module.exports = router;
 
 ---
 
+<a id="10-serverutilsemailjs"></a>
 **10. `server/utils/email.js`**
 
 Usar Nodemailer con transporter (Gmail o servicio que prefieran). Exportar funciones:
@@ -949,6 +1061,7 @@ Usar Nodemailer con transporter (Gmail o servicio que prefieran). Exportar funci
 
 ---
 
+<a id="11-serverutilsbookingapijs"></a>
 **11. `server/utils/bookingApi.js`**
 
 Usar axios para pegarle a RapidAPI (Booking.com). Exportar función:
@@ -957,6 +1070,7 @@ Usar axios para pegarle a RapidAPI (Booking.com). Exportar función:
 
 ---
 
+<a id="12-serverutilscloudinaryjs"></a>
 **12. `server/utils/cloudinary.js`**
 
 Configurar cloudinary con las credenciales del .env. Exportar función:
@@ -965,12 +1079,14 @@ Configurar cloudinary con las credenciales del .env. Exportar función:
 
 ---
 
+<a id="13-servermiddlewareuploadmiddlewarejs"></a>
 **13. `server/middleware/upload.middleware.js`**
 
 Configurar multer con `multer({ storage: multer.memoryStorage() })`. Exportar `upload` configurado para single file upload.
 
 ---
 
+<a id="14-serverindexjs-lo-que-erick-debe-modificar"></a>
 **14. `server/index.js` — Lo que Erick debe modificar**
 
 Descomentar y añadir estas líneas DESPUÉS de que Alejandro las deje como placeholders:
@@ -990,6 +1106,7 @@ Añadir los `require` correspondientes al inicio del archivo (incluyendo `paymen
 
 ---
 
+<a id="15-tareas-programadas-node-cron-en-serverindexjs"></a>
 **15. Tareas programadas (node-cron) en `server/index.js`**
 
 Añadir al final de `index.js`:
@@ -1035,7 +1152,11 @@ cron.schedule('2 0 * * *', async () => {
 
 ---
 
+<a id="-alex--frontend"></a>
 ### 🟨 ALEX — FRONTEND (React + Vite + Tailwind)
+
+> **Sub-índice de archivos asignados:**  
+> [1. Configuración inicial](#1-configuracion-inicial) · [2. api.js](#1-clientsrcservicesapijs) · [3. AuthContext.jsx](#3-clientsrccontextauthcontextjsx) · [4. Navbar.jsx](#4-clientsrccomponentslayoutnavbarjsx) · [5. Footer.jsx](#5-clientsrccomponentslayoutfooterjsx) · [6. Layout.jsx](#6-clientsrccomponentslayoutlayoutjsx) · [7. RoomCard.jsx](#7-clientsrccomponentsuiroomcardjsx) · [8. BookingCard.jsx](#8-clientsrccomponentsuibookingcardjsx) · [9. LoadingSpinner.jsx](#9-clientsrccomponentsuiloadingspinnerjsx) · [10. EmptyState.jsx](#10-clientsrccomponentsuiemptystatejsx) · [11. ProtectedRoute.jsx](#11-clientsrccomponentsuiprotectedroutejsx) · [12. HomePage.jsx](#12-clientsrcpagespublichomepagejsx) · [13. RoomsPage.jsx](#13-clientsrcpagespublicroomspagejsx) · [14. RoomDetailPage.jsx](#14-clientsrcpagespublicroomdetailpagejsx) · [15. LoginPage.jsx](#15-clientsrcpagespublicloginpagejsx) · [16. RegisterPage.jsx](#16-clientsrcpagespublicregisterpagejsx) · [17. BookingConfirmPage.jsx](#17-clientsrcpagesclientebookingconfirmpagejsx) · [18. MyBookingsPage.jsx](#18-clientsrcpagesclientemybookingspagejsx) · [19. ProfilePage.jsx](#19-clientsrcpagesclienteprofilepagejsx) · [20. CleaningPanelPage.jsx](#20-clientsrcpagesempleadocleaningpanelpagejsx) · [21. DashboardPage.jsx](#21-clientsrcpagesadmindashboardpagejsx) · [22. AdminRoomsPage.jsx](#22-clientsrcpagesadminadminroomspagejsx) · [23. AdminUsersPage.jsx](#23-clientsrcpagesadminadminuserspagejsx) · [24. AdminServicesPage.jsx](#24-clientsrcpagesadminadminservicespagejsx) · [25. AdminBookingsPage.jsx](#25-clientsrcpagesadminadminbookingspagejsx) · [26. AdminCleaningPage.jsx](#26-clientsrcpagesadminadmincleaningpagejsx) · [27. AdminPaymentsPage.jsx](#27-clientsrcpagesadminadminpaymentspagejsx) · [28. App.jsx](#28-clientsrcappjsx) · [28. main.jsx](#28-clientsrcmainjsx) · [29. index.html](#29-clientindexhtml)
 
 **Responsabilidad:** TODO el frontend. Cada componente, cada página, cada llamada a la API. Puede empezar EN PARALELO con Erick, usando datos mock mientras Erick termina los endpoints.
 
@@ -1052,6 +1173,7 @@ TODOS los archivos dentro de `client/src/`, `client/index.html`, `client/package
 
 ---
 
+<a id="1-configuracion-inicial"></a>
 **1. Configuración inicial**
 
 ```bash
@@ -1061,6 +1183,7 @@ npm install react-router-dom axios recharts react-datepicker react-icons react-h
 
 ---
 
+<a id="1-clientsrcservicesapijs"></a>
 **2. `client/src/services/api.js`**
 
 Crear instancia de axios con baseURL vacía (usa el proxy de Vite). Interceptor para añadir token JWT del localStorage al header Authorization.
@@ -1151,6 +1274,7 @@ export const paymentAPI = {
 
 ---
 
+<a id="3-clientsrccontextauthcontextjsx"></a>
 **3. `client/src/context/AuthContext.jsx`**
 
 Proveedor de contexto que maneje:
@@ -1165,6 +1289,7 @@ Al montar el provider, verificar si hay token en localStorage y llamar a getMe()
 
 ---
 
+<a id="4-clientsrccomponentslayoutnavbarjsx"></a>
 **4. `client/src/components/layout/Navbar.jsx`**
 
 Barra de navegación responsiva con Tailwind:
@@ -1179,18 +1304,21 @@ Barra de navegación responsiva con Tailwind:
 
 ---
 
+<a id="5-clientsrccomponentslayoutfooterjsx"></a>
 **5. `client/src/components/layout/Footer.jsx`**
 
 Footer simple con © 2025 Hotel Booking, links a políticas ficticias.
 
 ---
 
+<a id="6-clientsrccomponentslayoutlayoutjsx"></a>
 **6. `client/src/components/layout/Layout.jsx`**
 
 Componente wrapper: Navbar + children + Footer. Usar en App.jsx para envolver todas las rutas.
 
 ---
 
+<a id="7-clientsrccomponentsuiroomcardjsx"></a>
 **7. `client/src/components/ui/RoomCard.jsx`**
 
 Tarjeta de habitación para mostrar en grid:
@@ -1206,6 +1334,7 @@ Props: `room`, `onClick`
 
 ---
 
+<a id="8-clientsrccomponentsuibookingcardjsx"></a>
 **8. `client/src/components/ui/BookingCard.jsx`**
 
 Tarjeta para mostrar una reserva en el historial:
@@ -1217,18 +1346,21 @@ Tarjeta para mostrar una reserva en el historial:
 
 ---
 
+<a id="9-clientsrccomponentsuiloadingspinnerjsx"></a>
 **9. `client/src/components/ui/LoadingSpinner.jsx`**
 
 Spinner de carga centrado. Usar tailwind animate-spin.
 
 ---
 
+<a id="10-clientsrccomponentsuiemptystatejsx"></a>
 **10. `client/src/components/ui/EmptyState.jsx`**
 
 Mensaje de "No hay datos" con icono. Props: `message`, `icon`.
 
 ---
 
+<a id="11-clientsrccomponentsuiprotectedroutejsx"></a>
 **11. `client/src/components/ui/ProtectedRoute.jsx`**
 
 Componente que verifica autenticación y rol. Recibe `allowedRoles` array. Si user no está autenticado, redirige a /login. Si no tiene el rol, muestra mensaje "No autorizado".
@@ -1237,6 +1369,7 @@ Props: `children`, `allowedRoles`
 
 ---
 
+<a id="12-clientsrcpagespublichomepagejsx"></a>
 **12. `client/src/pages/public/HomePage.jsx`**
 
 Secciones:
@@ -1247,6 +1380,7 @@ Secciones:
 
 ---
 
+<a id="13-clientsrcpagespublicroomspagejsx"></a>
 **13. `client/src/pages/public/RoomsPage.jsx`**
 
 - Filtros en sidebar/top: tipo (select), precio (range), capacidad (select)
@@ -1257,6 +1391,7 @@ Secciones:
 
 ---
 
+<a id="14-clientsrcpagespublicroomdetailpagejsx"></a>
 **14. `client/src/pages/public/RoomDetailPage.jsx`**
 
 - Galería de imágenes (carrusel simple o grid de imágenes)
@@ -1268,18 +1403,21 @@ Secciones:
 
 ---
 
+<a id="15-clientsrcpagespublicloginpagejsx"></a>
 **15. `client/src/pages/public/LoginPage.jsx`**
 
 Formulario con email y password. Validación básica. Botón submit. Link a /register. Toast de éxito/error.
 
 ---
 
+<a id="16-clientsrcpagespublicregisterpagejsx"></a>
 **16. `client/src/pages/public/RegisterPage.jsx`**
 
 Formulario con name, email, password, confirmPassword. Validación. Link a /login.
 
 ---
 
+<a id="17-clientsrcpagesclientebookingconfirmpagejsx"></a>
 **17. `client/src/pages/cliente/BookingConfirmPage.jsx`**
 
 Esta es la página MÁS importante del flujo de reserva. Muestra:
@@ -1301,6 +1439,7 @@ Recibe roomId, checkIn, checkOut por query params o location state.
 
 ---
 
+<a id="18-clientsrcpagesclientemybookingspagejsx"></a>
 **18. `client/src/pages/cliente/MyBookingsPage.jsx`**
 
 - Título "Mis Reservas"
@@ -1311,12 +1450,14 @@ Recibe roomId, checkIn, checkOut por query params o location state.
 
 ---
 
+<a id="19-clientsrcpagesclienteprofilepagejsx"></a>
 **19. `client/src/pages/cliente/ProfilePage.jsx`**
 
 Muestra datos del usuario. Botón para editar (solo nombre y teléfono). Cambiar contraseña (modal aparte).
 
 ---
 
+<a id="20-clientsrcpagesempleadocleaningpanelpagejsx"></a>
 **20. `client/src/pages/empleado/CleaningPanelPage.jsx`**
 
 - Título "Panel de Limpieza"
@@ -1329,6 +1470,7 @@ Muestra datos del usuario. Botón para editar (solo nombre y teléfono). Cambiar
 
 ---
 
+<a id="21-clientsrcpagesadmindashboardpagejsx"></a>
 **21. `client/src/pages/admin/DashboardPage.jsx`**
 
 Layout de dashboard con:
@@ -1346,6 +1488,7 @@ Layout de dashboard con:
 
 ---
 
+<a id="22-clientsrcpagesadminadminroomspagejsx"></a>
 **22. `client/src/pages/admin/AdminRoomsPage.jsx`**
 
 - Tabla de todas las habitaciones
@@ -1356,24 +1499,28 @@ Layout de dashboard con:
 
 ---
 
+<a id="23-clientsrcpagesadminadminuserspagejsx"></a>
 **23. `client/src/pages/admin/AdminUsersPage.jsx`**
 
 Tabla de usuarios. Columnas: Nombre, Email, Rol (badge), Teléfono, Acciones. Botón crear usuario (especialmente para empleados). Selector de rol. Eliminar usuario.
 
 ---
 
+<a id="24-clientsrcpagesadminadminservicespagejsx"></a>
 **24. `client/src/pages/admin/AdminServicesPage.jsx`**
 
 Tabla de servicios. Columnas: Icono, Nombre, Descripción, Precio, Acciones. Crear/editar/eliminar modales.
 
 ---
 
+<a id="25-clientsrcpagesadminadminbookingspagejsx"></a>
 **25. `client/src/pages/admin/AdminBookingsPage.jsx`**
 
 Tabla de TODAS las reservas. Columnas: Cliente, Habitación, Check-in, Check-out, Total, Estado. Filtros por estado. Botón para cambiar estado (select en la misma tabla).
 
 ---
 
+<a id="26-clientsrcpagesadminadmincleaningpagejsx"></a>
 **26. `client/src/pages/admin/AdminCleaningPage.jsx`**
 
 - Tabla de todas las tareas de limpieza
@@ -1383,6 +1530,7 @@ Tabla de TODAS las reservas. Columnas: Cliente, Habitación, Check-in, Check-out
 
 ---
 
+<a id="27-clientsrcpagesadminadminpaymentspagejsx"></a>
 **27. `client/src/pages/admin/AdminPaymentsPage.jsx`**
 
 - Tabla de todos los pagos
@@ -1397,6 +1545,7 @@ Tabla de TODAS las reservas. Columnas: Cliente, Habitación, Check-in, Check-out
 
 ---
 
+<a id="28-clientsrcappjsx"></a>
 **28. `client/src/App.jsx`**
 
 ```jsx
@@ -1508,6 +1657,7 @@ export default App;
 
 ---
 
+<a id="28-clientsrcmainjsx"></a>
 **28. `client/src/main.jsx`**
 
 ```jsx
@@ -1525,6 +1675,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 ---
 
+<a id="29-clientindexhtml"></a>
 **29. `client/index.html`**
 
 ```html
@@ -1566,6 +1717,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 ---
 
+<a id="-checklist-de-integración"></a>
 ### 📋 CHECKLIST FINAL DE INTEGRACIÓN
 
 Cuando los 3 hayan terminado, hacer juntos:
@@ -1584,6 +1736,7 @@ Cuando los 3 hayan terminado, hacer juntos:
 
 ---
 
+<a id="-reglas-de-oro"></a>
 ### 🚫 REGLAS DE ORO (NO ROMPER)
 
 1. **NADIE toca archivos de otra persona.** Si necesitas un cambio en un archivo ajeno, lo pides por WhatsApp.
