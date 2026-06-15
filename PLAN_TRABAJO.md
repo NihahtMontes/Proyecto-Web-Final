@@ -8,6 +8,28 @@
 
 ---
 
+> ## 🚫 NO HACER MERGE DE LA RAMA `Frontend`
+> 
+> Existe una rama `Frontend` en el repositorio que **NO se debe mergear a main**. Tiene problemas críticos:
+> 
+> | Problema | Detalle |
+> |---|---|
+> | Eliminó TODO el backend | Los 40+ archivos de `server/` (modelos, controllers, routes, middleware, utils) fueron borrados |
+> | Eliminó `PLAN_TRABAJO.md` | Se borró este documento |
+> | Vació `README.md` | Toda la guía técnica fue reemplazada por el default de Vite |
+> | Cambió la estructura | Movió `client/src/` a `src/` en la raíz, rompiendo los scripts del `package.json` |
+> | `Login.jsx` no usa AuthContext | Hace manualmente `localStorage.setItem` en vez de usar `AuthContext.login()` |
+> | `Login.jsx` redirige siempre a `/admin` | No diferencia roles |
+> | `AuthContext.jsx` no tiene `register` | Solo tiene `login` y `logout` |
+> | `PrivateRoute.jsx` usa `role` (string) | Debería usar `allowedRoles` (array) |
+> | `App.jsx` solo tiene 3 rutas | Faltan ~15 rutas |
+> | `Navbar.jsx` admin incompleto | Solo tiene 2 links, faltan 5 |
+> | `Dashboard.jsx` apunta a `/dashboard/stats` | Debería ser `/dashboard/summary` |
+> 
+> **Si alguien quiere reutilizar código de esa rama, debe copiarlo manualmente y corregirlo según las instrucciones de este documento.**
+
+---
+
 ## 📑 ÍNDICE
 
 | # | Sección | Descripción |
@@ -38,6 +60,84 @@
 | 4 | **Probar antes de pushear:** cada endpoint y cada página. |
 | 5 | **El `.env` NUNCA se sube a git.** |
 | 6 | **Si algo falla, preguntar al grupo.** No adivinar. |
+| 7 | **Trabajar en ramas separadas, NO en main directamente.** Hacer merge solo cuando el líder apruebe. |
+
+### 🌿 Convención de Ramas
+
+**Cada integrante trabaja en su propia rama. NO se trabaja directamente en `main`.**
+
+| Integrante | Rama | Comando para crear |
+|---|---|---|
+| Erick | `feature/erick-backend-fixes` | `git checkout -b feature/erick-backend-fixes` |
+| Erick (admin pages) | `feature/erick-admin-frontend` | `git checkout -b feature/erick-admin-frontend` |
+| Alejandro | `feature/alejandro-frontend` | `git checkout -b feature/alejandro-frontend` |
+
+**Flujo de trabajo por rama:**
+
+```bash
+# 1. Crear tu rama (SOLO LA PRIMERA VEZ)
+git checkout -b feature/erick-backend-fixes
+
+# 2. Trabajar y hacer commits
+git add .
+git commit -m "fix: descripción del cambio"
+
+# 3. Antes de push, actualizar tu rama con main
+git fetch origin
+git merge origin/main
+
+# 4. Resolver conflictos si los hay, luego push
+git push origin feature/erick-backend-fixes
+
+# 5. Crear Pull Request en GitHub para que el líder revise
+# Ir a https://github.com/NihahtMontes/Proyecto-Web-Final/compare
+# Base: main ← Compare: feature/erick-backend-fixes
+# El líder revisa y hace merge
+```
+
+**Regla de merge:**
+- Solo el **líder del equipo** (Monte) hace merge a `main`.
+- Se hace merge cuando la rama pasa pruebas básicas y no rompe nada.
+- Después de cada merge a main, **todos** hacen `git pull origin main` y luego `git merge origin/main` en su rama.
+
+### Estructura del Proyecto
+
+> **IMPORTANTE:** La estructura del frontend es `client/src/`. NO usar `src/` en la raíz.
+
+```
+booking-hotel/
+├── client/                    # Frontend (Alejandro)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   └── ui/
+│   │   ├── pages/
+│   │   │   ├── public/
+│   │   │   ├── cliente/
+│   │   │   ├── empleado/
+│   │   │   └── admin/
+│   │   ├── context/
+│   │   ├── services/
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
+├── server/                    # Backend (Erick + Alejandro fundación)
+│   ├── config/
+│   ├── models/
+│   ├── routes/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── utils/
+│   ├── index.js
+│   └── package.json
+├── .gitignore
+├── package.json               # Raíz (scripts compartidos)
+├── README.md                  # Guía técnica
+└── PLAN_TRABAJO.md            # Este documento
+```
 
 ### Prerrequisitos
 
@@ -46,6 +146,7 @@ Ambos deben tener:
 - npm 9.x+ (`npm -v`)
 - MongoDB corriendo (local o Atlas)
 - `git pull origin main` ejecutado antes de empezar
+- Su rama creada y activa (`git branch` para verificar)
 
 ---
 
@@ -115,6 +216,35 @@ El frontend actual es **100% Vite default** (counter demo). No se ha implementad
 
 **Total: ~30 archivos por crear.**
 
+### 💡 Código Reutilizable de la Rama `Frontend`
+
+> La rama `Frontend` tiene código que **sirve como referencia** pero necesita correcciones. **NO hacer merge.** Copiar manualmente y corregir.
+
+| Archivo | ¿Sirve? | Correcciones necesarias |
+|---|---|---|
+| `src/services/api.js` | ✅ Buena base | Cambiar `baseURL` de `'http://localhost:5000/api'` a `'/api'` (usar proxy de Vite). Guardar en `client/src/services/api.js` |
+| `src/context/AuthContext.jsx` | ⚠️ Incompleto | Agregar función `register(name, email, password)`. Guardar `user` en localStorage al hacer login |
+| `src/components/layout/Navbar.jsx` | ⚠️ Incompleto | Admin solo tiene 2 links (Dashboard, Habitaciones). Faltan: Reservas, Usuarios, Servicios, Limpieza, Pagos. Usar `allowedRoles` en vez de `role` |
+| `src/components/layout/Layout.jsx` | ⚠️ Pequeño fix | Usar `<Outlet />` en vez de `{children}` con el pattern de React Router v7 |
+| `src/components/layout/Footer.jsx` | ✅ OK | Copiar tal cual a `client/src/components/layout/Footer.jsx` |
+| `src/components/auth/PrivateRoute.jsx` | ❌ Bug | Usa `role` (string). Cambiar a `allowedRoles` (array): `if (allowedRoles && !allowedRoles.includes(user.role))` |
+| `src/pages/Home.jsx` | ✅ Buena base | Agregar fetch de habitaciones y servicios. Copiar a `client/src/pages/public/HomePage.jsx` |
+| `src/pages/Login.jsx` | ❌ Bug | No usa AuthContext. Redirige siempre a `/admin`. Reescribir usando `AuthContext.login()` y redirigir según rol |
+| `src/pages/AdminDashboard.jsx` | ⚠️ Solo placeholder | Necesita dashboards con Recharts, fetch de `dashboardAPI.getSummary()`, etc. |
+| `src/pages/Dashboard.jsx` | ❌ Bug | Apunta a `/dashboard/stats` (no existe). Debe apuntar a `/dashboard/summary` |
+| `src/App.jsx` | ❌ Incompleto | Solo 3 rutas. Faltan ~15 rutas. Reescribir según la spec de este documento |
+
+**Cómo copiar código de la rama Frontend sin hacer merge:**
+
+```bash
+# Ejemplo: copiar solo Footer.jsx de la rama Frontend
+git show origin/Frontend:src/components/layout/Footer.jsx > client/src/components/layout/Footer.jsx
+
+# Ejemplo: copiar api.js y corregir baseURL manualmente después
+git show origin/Frontend:src/services/api.js > client/src/services/api.js
+# Luego editar y cambiar baseURL a '/api'
+```
+
 ---
 
 <a id="-distribución-del-trabajo"></a>
@@ -122,13 +252,13 @@ El frontend actual es **100% Vite default** (counter demo). No se ha implementad
 
 ### En paralelo (simultáneamente)
 
-| Erick | Alejandro |
+| Erick 🌿 `feature/erick-backend-fixes` | Alejandro 🌿 `feature/alejandro-frontend` |
 |---|---|
 | Corrige TODOS los bugs del backend (C1-C9 + M1-M6) | Crea TODA la infraestructura del frontend + páginas públicas + cliente/empleado |
 
 ### Después (secuencial)
 
-| Erick |
+| Erick 🌿 `feature/erick-admin-frontend` |
 |---|
 | Cuando termine el backend → Crea las 7 páginas admin del frontend |
 
@@ -136,8 +266,9 @@ El frontend actual es **100% Vite default** (counter demo). No se ha implementad
 
 1. **Erick** construyó el backend → conoce los bugs y sabe cómo arreglarlos rápido.
 2. **Alejandro** puede crear el frontend sin depender de que el backend esté arreglado (usa mock data mientras tanto).
-3. **Trabajan en simultáneo** → se ahorra tiempo.
+3. **Trabajan en simultáneo en ramas separadas** → se ahorra tiempo y no hay conflictos.
 4. **Erick hace admin después** → ya conoce los endpoints que él mismo arregló, puede conectar el dashboard y las tablas admin sin adivinar.
+5. **Solo se mergea a main cuando el líder aprueba** → calidad controlada.
 
 ### Archivos por persona
 
@@ -147,15 +278,15 @@ El frontend actual es **100% Vite default** (counter demo). No se ha implementad
 | `booking.controller.js` (fix) | `client/src/index.css` (fix) |
 | `dashboard.controller.js` (reescribir) | `client/src/App.css` (eliminar) |
 | `dashboard.routes.js` (reescribir) | `client/src/main.jsx` (fix) |
-| `cleaning.controller.js` (fix) | `client/src/services/api.js` (nuevo) |
-| `server/package.json` (nuevo) | `client/src/context/AuthContext.jsx` (nuevo) |
-| `email.js` (implementar stubs) | `client/src/components/ui/*` (5 archivos nuevos) |
-| `index.js` (fix cron) | `client/src/components/layout/*` (3 archivos nuevos) |
-| `payment.controller.js` (fix) | `client/src/pages/public/*` (5 páginas nuevas) |
-| `server/.env` (llenar variables) | `client/src/pages/cliente/*` (3 páginas nuevas) |
-| `admin/DashboardPage.jsx` (nuevo) | `client/src/pages/empleado/*` (1 página nueva) |
-| `admin/AdminRoomsPage.jsx` (nuevo) | |
-| `admin/AdminUsersPage.jsx` (nuevo) | |
+| `cleaning.controller.js` (fix) | `client/vite.config.js` (verificar) |
+| `server/package.json` (nuevo) | `client/package.json` (verificar deps) |
+| `email.js` (implementar stubs) | `client/src/services/api.js` (nuevo) |
+| `index.js` (fix cron) | `client/src/context/AuthContext.jsx` (nuevo) |
+| `payment.controller.js` (fix) | `client/src/components/ui/*` (5 archivos nuevos) |
+| `server/.env` (llenar variables) | `client/src/components/layout/*` (3 archivos nuevos) |
+| `admin/DashboardPage.jsx` (nuevo) | `client/src/pages/public/*` (5 páginas nuevas) |
+| `admin/AdminRoomsPage.jsx` (nuevo) | `client/src/pages/cliente/*` (3 páginas nuevas) |
+| `admin/AdminUsersPage.jsx` (nuevo) | `client/src/pages/empleado/*` (1 página nueva) |
 | `admin/AdminServicesPage.jsx` (nuevo) | |
 | `admin/AdminBookingsPage.jsx` (nuevo) | |
 | `admin/AdminCleaningPage.jsx` (nuevo) | |
@@ -169,12 +300,15 @@ El frontend actual es **100% Vite default** (counter demo). No se ha implementad
 
 > **Objetivo:** Dejar el backend 100% funcional.  
 > **Trabaja en paralelo con Alejandro.**  
-> **Cada ítem = 1 commit. Hacer en este orden.**
+> **Cada ítem = 1 commit. Hacer en este orden.**  
+> **🌿 Rama:** `feature/erick-backend-fixes`
 
 ### Prerrequisito
 
 ```bash
+git checkout main
 git pull origin main
+git checkout -b feature/erick-backend-fixes
 ```
 
 ---
@@ -563,11 +697,14 @@ PATCH /api/cleaning/<task_id>/start  (cuando ya está en_progreso)
 > **Objetivo:** Crear toda la infraestructura del frontend + componentes + páginas públicas + páginas cliente/empleado.  
 > **Trabaja en paralelo con Erick.** Puede empezar AHORA sin esperar a que Erick termine el backend (usa mock data o deja las llamadas API listas para cuando el backend esté arreglado).  
 > **Duración estimada:** 4-5 días  
+> **🌿 Rama:** `feature/alejandro-frontend`
 
 ### Prerrequisito
 
 ```bash
+git checkout main
 git pull origin main
+git checkout -b feature/alejandro-frontend
 ```
 
 ---
@@ -627,6 +764,44 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 ```
 
 **Commit:** `fix: corregir main.jsx`
+
+#### A0e — Verificar/Crear `client/vite.config.js`
+
+Si no existe o está vacío, crear con este contenido exacto:
+
+```js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': 'http://localhost:5000'
+    }
+  }
+})
+```
+
+> **IMPORTANTE:** El proxy es para que las llamadas a `/api/*` se redirijan al backend en puerto 5000. Sin esto, `api.js` con `baseURL: '/api'` no funciona.
+
+**Commit:** `fix: configurar vite.config.js con proxy y tailwindcss`
+
+#### A0f — Verificar `client/package.json`
+
+Asegurarse de que tenga estas dependencias:
+
+```bash
+cd client
+npm install react-router-dom axios recharts react-datepicker react-icons react-hot-toast
+npm install -D @tailwindcss/vite
+```
+
+> Si `package.json` ya tiene estas dependencias, NO reinstalar. Solo verificar.
+
+**Commit:** `chore: verificar dependencias del frontend`
 
 ---
 
@@ -888,9 +1063,19 @@ Secciones:
 <a id="-erick--frontend-parte-2"></a>
 ## 🟩 ERICK — Frontend Parte 2
 
-> **Prerrequisito:** Haber terminado TODOS los fixes de backend (C1-C9 + M1-M6). Hacer `git pull origin main`.  
+> **Prerrequisito:** Haber terminado TODOS los fixes de backend (C1-C9 + M1-M6) y que la rama `feature/erick-backend-fixes` haya sido mergeada a main. Hacer `git pull origin main` y luego crear nueva rama.  
 > **Objetivo:** Crear las 7 páginas admin + App.jsx con todas las rutas.  
 > **Duración estimada:** 3-4 días  
+> **🌿 Rama:** `feature/erick-admin-frontend`
+
+### Prerrequisito
+
+```bash
+# Después de que el líder haya mergeado feature/erick-backend-fixes a main:
+git checkout main
+git pull origin main
+git checkout -b feature/erick-admin-frontend
+```  
 
 ### Archivos que Erick crea
 
@@ -1115,110 +1300,128 @@ export default App;
 ## 🔄 FLUJO DE TRABAJO
 
 ```
-╔═══════════════════════════════════════════════════════════════╗
-║                    TRABAJO EN PARALELO                        ║
-╠═══════════════════════════════════════════════════════════════╣
-║                                                               ║
-║  ERICK                           ALEJANDRO                    ║
-║  ─────                           ─────────                    ║
-║  Día 1-3:                        Día 1-5:                    ║
-║  C1 → C2 → C3/C4/C5             A0a → A0b → A0c → A0d       ║
-║  → C6/C7/C8 → C9                → A1 → A2 → A3-A7           ║
-║  → M1 → M2 → M5 → M6           → A8-A10 → A11-A15           ║
-║                                  → A16 → A17 → A18 → A19     ║
-║  push al terminar cada fix       push al terminar cada archivo║
-║                                                               ║
-╠═══════════════════════════════════════════════════════════════╣
-║                    TRABAJO SECUENCIAL                         ║
-╠═══════════════════════════════════════════════════════════════╣
-║                                                               ║
-║  ERICK (después de terminar backend):                         ║
-║  Día 4-7:                                                     ║
-║  git pull → E1 → E2 → E3 → E4 → E5 → E6 → E7               ║
-║                                                               ║
-║  AMBOS (cuando terminen):                                     ║
-║  Acordar quién crea App.jsx y hacer test final                ║
-║                                                               ║
-╚═══════════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════════════╗
+║                         TRABAJO EN PARALELO                          ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║                                                                       ║
+║  ERICK 🌿 feature/erick-backend-fixes    ALEJANDRO 🌿 feature/alejandro-frontend   ║
+║  ─────                                    ─────────                                   ║
+║  Día 1-3:                                Día 1-5:                                    ║
+║  C1 → C2 → C3/C4/C5                     A0a → A0b → A0c → A0d → A0e → A0f          ║
+║  → C6/C7/C8 → C9                        → A1 → A2 → A3-A7                           ║
+║  → M1 → M2 → M5 → M6                   → A8-A10 → A11-A15                           ║
+║                                           → A16 → A17 → A18 → A19                     ║
+║  push a su rama al terminar cada fix      push a su rama al terminar cada archivo     ║
+║  → PR → líder mergea a main              → PR → líder mergea a main                  ║
+║                                                                       ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║                         TRABAJO SECUENCIAL                            ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║                                                                       ║
+║  ERICK 🌿 feature/erick-admin-frontend (después de backend mergeado): ║
+║  Día 4-7:                                                             ║
+║  git pull origin main → git checkout -b feature/erick-admin-frontend  ║
+║  E1 → E2 → E3 → E4 → E5 → E6 → E7                                   ║
+║  push → PR → líder mergea a main                                      ║
+║                                                                       ║
+║  AMBOS (cuando terminen):                                             ║
+║  Acordar quién crea App.jsx y hacer test final                         ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
 ```
 
-### Secuencia paso a paso
+### Secuencia paso a paso con ramas
 
 | Paso | Erick | Alejandro | Nota |
 |---|---|---|---|
-| 1 | `git pull origin main` | `git pull origin main` | Ambos parten del mismo punto |
-| 2 | C1, C2, C3/C4/C5, C6/C7/C8, C9, M1, M2, M5, M6 | A0a, A0b, A0c, A0d, A1, A2 | **En paralelo** |
-| 3 | push → "Backend arreglado" | A3-A10 (componentes) | Alejandro sigue sin backend |
-| 4 | `git pull` (trae cambios de Alejandro) | `git pull` (trae fixes de Erick) | Sincronizar |
-| 5 | E1-E7 (páginas admin) | A11-A19 (páginas + cliente/empleado) | **En paralelo** |
-| 6 | push | push | Ambos terminaron |
-| 7 | **Acordar quién crea App.jsx** | — | El que termine primero lo hace |
-| 8 | `git pull` + test final | `git pull` + test final | Verificar todo funciona |
+| 0 | `git checkout -b feature/erick-backend-fixes` | `git checkout -b feature/alejandro-frontend` | Cada uno en su rama |
+| 1 | C1, C2, C3/C4/C5, C6/C7/C8, C9, M1, M2, M5, M6 | A0a-A0f, A1, A2 | **En paralelo, cada uno en su rama** |
+| 2 | Push a su rama → Crear PR | Push a su rama → Crear PR | Líder revisa y mergea |
+| 3 | Espera a que líder mergee backend | Continúa A3-A10 (componentes) | Alejandro no espera backend |
+| 4 | `git checkout main && git pull && git checkout -b feature/erick-admin-frontend` | A11-A19 (páginas cliente/empleado) | Erick empieza admin pages |
+| 5 | E1-E7 (admin pages) | Push final | **En paralelo** |
+| 6 | Push → PR → líder mergea | — | Ambos terminaron |
+| 7 | **Acordar quién crea App.jsx** | — | El que termine primero |
+| 8 | `git pull origin main` + test final | `git pull origin main` + test final | Verificar todo funciona |
 
 ### Reglas de coordinación
 
 | # | Regla |
 |---|---|
-| 1 | **Erick hace push primero** (después de C9). Alejandro hace `git pull`. |
-| 2 | **Alejandro pushea A1 (api.js) y A2 (AuthContext) primero.** Erick necesita estos para las páginas admin. |
-| 3 | **Ambos hacen pull mínimo 2 veces al día.** |
-| 4 | **1 archivo = 1 commit.** Mensajes descriptivos. |
-| 5 | **Si hay conflicto:** Comunicar por el grupo inmediatamente. |
-| 6 | **No tocar archivos del otro sin pedir permiso.** |
+| 1 | **Cada integrante trabaja en SU rama.** Nunca directamente en `main`. |
+| 2 | **Para integrar cambios:** push a su rama → crear Pull Request → líder revisa → líder mergea a main. |
+| 3 | **Alejandro pushea A1 (api.js) y A2 (AuthContext) primero.** Erick necesita estos para las páginas admin. |
+| 4 | **Después de cada merge a main, ambos hacen `git pull origin main` y `git merge origin/main` en su rama.** |
+| 5 | **1 archivo = 1 commit.** Mensajes descriptivos. |
+| 6 | **Si hay conflicto:** Comunicar por el grupo inmediatamente. |
+| 7 | **No tocar archivos del otro sin pedir permiso.** |
 
 ---
 
 ### Dependencias de archivos
 
 ```
-ALEJANDRO A0 (correcciones)       ← INDEPENDIENTE, empezar AHORA
-ALEJANDRO A1 (api.js)             ← INDEPENDIENTE (no necesita backend arreglado)
-ALEJANDRO A2 (AuthContext)        ← NECESITA A1
-ALEJANDRO A3-A10 (componentes)    ← NECESITA A2
-ALEJANDRO A11-A15 (públicas)      ← NECESITA A3-A10
-ALEJANDRO A16-A19 (cliente/emp)   ← NECESITA A3-A10, USA A1 (api.js)
+ALEJANDRO A0-A0f (correcciones)    ← INDEPENDIENTE, empezar AHORA
+ALEJANDRO A1 (api.js)              ← INDEPENDIENTE (no necesita backend arreglado)
+ALEJANDRO A2 (AuthContext)          ← NECESITA A1
+ALEJANDRO A3-A10 (componentes)     ← NECESITA A2
+ALEJANDRO A11-A15 (públicas)       ← NECESITA A3-A10
+ALEJANDRO A16-A19 (cliente/emp)    ← NECESITA A3-A10, USA A1 (api.js)
 
-ERICK C1-C9 (backend fixes)       ← INDEPENDIENTE, empezar AHORA
-ERICK E1-E7 (admin pages)         ← NECESITA A1 + A2 (api.js + AuthContext) + backend arreglado
+ERICK C1-C9 (backend fixes)        ← INDEPENDIENTE, empezar AHORA
+ERICK E1-E7 (admin pages)          ← NECESITA A1 + A2 (api.js + AuthContext) + backend arreglado
 ```
 
-> **Importante:** Alejandro puede empezar TODO inmediatamente. Erick puede empezar los fixes de backend inmediatamente. Cuando Erick termine el backend y necesite hacer las páginas admin, Alejandro ya habrá pusheado api.js y AuthContext, así que Erick solo hace `git pull` y empieza.
+> **Importante:** Alejandro puede empezar TODO inmediatamente. Erick puede empezar los fixes de backend inmediatamente. Cuando Erick termine el backend y necesite hacer las páginas admin, Alejandro ya habrá pusheado api.js y AuthContext, así que Erick solo hace `git pull origin main` en su nueva rama y empieza.
 
 ---
 
 <a id="-checklist-final"></a>
 ## ✅ CHECKLIST FINAL
 
-Cuando ambos hayan terminado, juntos verificar:
+Cuando ambos hayan terminado y el líder haya mergeado ambas ramas a main:
 
 ```bash
-# 1. Instalar todo
+# 1. Traer todo lo mergeado
+git checkout main
+git pull origin main
+
+# 2. Instalar todo
 npm run install-all
 
-# 2. Levantar servidor y cliente
+# 3. Levantar servidor y cliente
 npm run dev
 # Debe mostrar: server en 5000, client en 5173
 
-# 3. Flujo completo cliente
+# 4. Flujo completo cliente
 # - Registro → Login → Ver habitaciones → Filtrar → Ver detalle
 # - Seleccionar fechas → Elegir servicios → Elegir pago QR
 # - Confirmar reserva → Ver en "Mis Reservas" → Cancelar
 
-# 4. Flujo empleado
+# 5. Flujo empleado
 # - Login empleado → Ver tareas → Iniciar limpieza → Completar
 
-# 5. Flujo admin
+# 6. Flujo admin
 # - Login admin → Dashboard (ver métricas y gráficos)
 # - CRUD habitaciones → CRUD usuarios → CRUD servicios
 # - Ver reservas → Cambiar estado → Asignar limpieza
 # - Verificar pagos (QR, Tigo Money, Transferencia, Efectivo)
 
-# 6. Verificar que gráficos cargan datos reales
+# 7. Verificar que gráficos cargan datos reales
 
-# 7. Verificar que no hay errores en consola del navegador
+# 8. Verificar que no hay errores en consola del navegador
 
-# 8. Último commit y push
+# 9. Último commit y push
 git add .
 git commit -m "feat: entrega final - frontend completo"
 git push origin main
 ```
+
+### Flujo de Pull Requests
+
+| Integrante | Rama | Qué contiene | Cuándo crear PR |
+|---|---|---|---|
+| Erick | `feature/erick-backend-fixes` | C1-C9 + M1-M6 (bugs corregidos) | Después de probar todos los endpoints |
+| Alejandro | `feature/alejandro-frontend` | A0-A19 (infraestructura + componentes + páginas) | Después de probar navegación con mock data |
+| Erick | `feature/erick-admin-frontend` | E1-E7 (páginas admin) | Después de probar las 7 páginas admin |
+| Ambos | — | App.jsx con rutas finales | Como último commit en main |
