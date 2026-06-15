@@ -1,9 +1,10 @@
 # 📘 PLAN DE TRABAJO FINAL — ByteHotel
 
 > **Grupo:** ByteHotel  
-> **Integrantes:** Erick, Alejandro  
-> **Fase:** Corrección de bugs + Implementación completa del frontend  
+> **Integrantes:** Erick Ferrel, Alejandro Rocabado  
+> **Fase:** Corrección de bugs del backend + Implementación completa del frontend  
 > **Documento base:** README.md (guía técnica del proyecto)  
+> **Fecha:** Junio 2026  
 
 ---
 
@@ -11,108 +12,190 @@
 
 | # | Sección | Descripción |
 |---|---|---|
-| 1 | [Antes de Empezar](#antes-de-empezar) | Reglas y prerrequisitos |
-| 2 | [Resumen de Bugs Encontrados](#resumen-de-bugs-encontrados) | Evaluación completa del backend |
-| 3 | [ERICK — Fase 1: Corrección de Backend](#-erick--fase-1-corrección-de-backend) | 9 bugs críticos + bugs medios + menores |
-| 4 | [ERICK — Fase 2: Frontend (Parte 1)](#-erick--fase-2-frontend-parte-1) | Infraestructura + componentes + páginas públicas |
-| 5 | [ALEJANDRO — Fase 2: Frontend (Parte 2)](#-alejandro--fase-2-frontend-parte-2) | Páginas cliente + empleado + admin |
-| 6 | [ALLY — Fase 2: Frontend (Parte 3)](#-alex--fase-2-frontend-parte-3) | Páginas admin + App.jsx |
-| 7 | [Flujo de Trabajo](#flujo-de-trabajo) | Qué hacer en qué orden |
+| 1 | [Antes de Empezar](#-antes-de-empezar) | Reglas y prerrequisitos |
+| 2 | [Resumen de Bugs Encontrados](#-resumen-de-bugs-encontrados) | Evaluación completa del backend |
+| 3 | [Resumen del Frontend Pendiente](#-resumen-del-frontend-pendiente) | Estado actual del frontend |
+| 4 | [Distribución del Trabajo](#-distribución-del-trabajo) | Qué hace cada quién |
+| 5 | [ERICK — Corrección de Backend](#-erick--corrección-de-backend) | 9 bugs críticos + bugs medios |
+| 6 | [ALEJANDRO — Frontend Parte 1](#-alejandro--frontend-parte-1) | Infraestructura + componentes + páginas públicas + cliente/empleado |
+| 7 | [ERICK — Frontend Parte 2](#-erick--frontend-parte-2) | Páginas admin (después de terminar el backend) |
+| 8 | [Archivo Final: App.jsx](#-archivo-final-appjsx) | Ensamblaje de rutas (cuando ambos terminen) |
+| 9 | [Flujo de Trabajo](#-flujo-de-trabajo) | Timeline y coordinación |
+| 10 | [Checklist Final](#-checklist-final) | Verificación de la entrega |
 
 ---
 
-## ANTES DE EMPEZAR
+<a id="-antes-de-empezar"></a>
+## ⚠️ ANTES DE EMPEZAR
 
-### Reglas
+### Reglas del equipo
 
-1. **Nadie toca archivos que no le corresponden sin avisar al grupo.**
-2. **Siempre `git pull origin main` antes de `git push`.**
-3. **Commits pequeños:** 1 fix = 1 commit, 1 componente = 1 commit.
-4. **Probar antes de pushear:** cada endpoint y cada página.
-5. **El `.env` NUNCA se sube a git.**
+| # | Regla |
+|---|---|
+| 1 | **Nadie toca archivos que no le corresponden sin avisar al grupo.** |
+| 2 | **Siempre `git pull origin main` antes de `git push`.** |
+| 3 | **Commits pequeños:** 1 fix = 1 commit, 1 componente = 1 commit. |
+| 4 | **Probar antes de pushear:** cada endpoint y cada página. |
+| 5 | **El `.env` NUNCA se sube a git.** |
+| 6 | **Si algo falla, preguntar al grupo.** No adivinar. |
 
 ### Prerrequisitos
 
-Verificar que ambos tengan:
-- Node.js 18.x o 20.x LTS
-- npm 9.x+
+Ambos deben tener:
+- Node.js 18.x o 20.x LTS (`node -v`)
+- npm 9.x+ (`npm -v`)
 - MongoDB corriendo (local o Atlas)
-- `git pull origin main` ejecutado
+- `git pull origin main` ejecutado antes de empezar
 
 ---
 
-## RESUMEN DE BUGS ENCONTRADOS
+<a id="-resumen-de-bugs-encontrados"></a>
+## 🔍 RESUMEN DE BUGS ENCONTRADOS
 
 ### BUGS CRÍTICOS (bloquean la aplicación)
 
 | # | Archivo | Bug | Solución |
 |---|---|---|---|
-| C1 | `server/controllers/auth.controller.js:23` | `register` acepta `role` del body. Cualquier usuario puede autoregistrarse como admin | Eliminar `role` del destructuring, forzar `role: 'cliente'` |
-| C2 | `server/controllers/booking.controller.js` | `createBooking` no valida solapamiento de fechas. Dos reservas pueden overlapping | Agregar validación de solapamiento antes de crear la reserva |
-| C3 | `server/controllers/dashboard.controller.js` | Solo existe `getDashboardStats`. Faltan `getSummary`, `getOccupancyData`, `getRevenueData`, `getTopRooms` | Implementar las 4 funciones con aggregation pipelines |
-| C4 | `server/routes/dashboard.routes.js` | Solo 1 ruta `/stats` en vez de 4 (`/summary`, `/occupancy`, `/revenue`, `/top-rooms`) | Agregar las 4 rutas con sus controladores |
-| C5 | `server/controllers/dashboard.controller.js:12` | Usa `status: 'ocupada'` pero el modelo Room tiene `'ocupado'`. Siempre retorna 0 | Cambiar `'ocupada'` por `'ocupado'` |
-| C6 | `server/controllers/cleaning.controller.js` | `assignTask` no verifica que `employeeId` tenga rol `'empleado'` | Agregar verificación de rol antes de asignar |
-| C7 | `server/controllers/cleaning.controller.js` | `startTask` no verifica que status sea `'pendiente'` | Agregar verificación de status |
-| C8 | `server/controllers/cleaning.controller.js` | `completeTask` no verifica que status sea `'en_progreso'` | Agregar verificación de status |
+| C1 | `auth.controller.js:23` | `register` acepta `role` del body. Cualquier usuario puede autoregistrarse como admin | Eliminar `role` del destructuring, forzar `role: 'cliente'` |
+| C2 | `booking.controller.js` | `createBooking` no valida solapamiento de fechas. Dos reservas pueden overlapping | Agregar validación de solapamiento antes de crear la reserva |
+| C3 | `dashboard.controller.js` | Solo existe `getDashboardStats`. Faltan `getSummary`, `getOccupancyData`, `getRevenueData`, `getTopRooms` | Implementar las 4 funciones con aggregation pipelines |
+| C4 | `dashboard.routes.js` | Solo 1 ruta `/stats` en vez de 4 (`/summary`, `/occupancy`, `/revenue`, `/top-rooms`) | Agregar las 4 rutas con sus controladores |
+| C5 | `dashboard.controller.js:12` | Usa `status: 'ocupada'` pero el modelo Room tiene `'ocupado'`. Siempre retorna 0 | Cambiar `'ocupada'` por `'ocupado'` |
+| C6 | `cleaning.controller.js` | `assignTask` no verifica que `employeeId` tenga rol `'empleado'` | Agregar verificación de rol antes de asignar |
+| C7 | `cleaning.controller.js` | `startTask` no verifica que status sea `'pendiente'` | Agregar verificación de status |
+| C8 | `cleaning.controller.js` | `completeTask` no verifica que status sea `'en_progreso'` | Agregar verificación de status |
 | C9 | `server/package.json` | **NO EXISTE**. Dependencias están en la raíz. El server no puede arrancar | Crear `server/package.json` con todas las dependencias |
 
 ### BUGS MEDIOS (funcionalidad incompleta)
 
 | # | Archivo | Bug | Solución |
 |---|---|---|---|
-| M1 | `server/utils/email.js` | 3 de 4 funciones son stubs vacíos: `sendCheckInReminder`, `sendCheckOutReminder`, `sendReviewInvitation` | Implementar las 3 funciones siguiendo el patrón de `sendBookingConfirmation` |
-| M2 | `server/index.js` (cron) | Cron de check-out no envía email de invitación a calificar | Agregar `sendReviewInvitation` en el cron de check-out |
-| M3 | `server/.env` | 6 variables vacías: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `RAPIDAPI_KEY`, `EMAIL_USER`, `EMAIL_PASS` | Llenar con valores reales (compartir por privado) |
-| M4 | `client/index.html` | `lang="en"` en vez de `"es"`, título `"client"` en vez de `"Hotel Booking"`, sin clases en `<body>` | Corregir los 3 valores |
+| M1 | `email.js` | 3 de 4 funciones son stubs vacíos: `sendCheckInReminder`, `sendCheckOutReminder`, `sendReviewInvitation` | Implementar las 3 funciones |
+| M2 | `index.js` (cron) | Cron de check-out no envía email de invitación a calificar | Agregar `sendReviewInvitation` en el cron |
+| M3 | `.env` | 6 variables vacías: `CLOUDINARY_*`, `RAPIDAPI_KEY`, `EMAIL_USER`, `EMAIL_PASS` | Llenar con valores reales (compartir por privado) |
+| M4 | `client/index.html` | `lang="en"` en vez de `"es"`, título `"client"`, sin clases en `<body>` | Corregir los 3 valores |
 | M5 | `client/src/index.css` | 110+ líneas de CSS default de Vite que interfieren con Tailwind | Eliminar todo excepto `@import "tailwindcss";` |
-| M6 | `client/src/App.css` | Archivo no especificado en el README, interfiere con Tailwind | Eliminar archivo |
+| M6 | `client/src/App.css` | Archivo no especificado, interfiere con Tailwind | Eliminar archivo |
 
-### BUGS MENORES (no bloquean pero difieren del spec)
+### BUGS MENORES (no bloquean)
 
 | # | Archivo | Bug |
 |---|---|---|
-| m1 | `server/models/Room.js` | Tiene `timestamps: true` (agrega `updatedAt`), inconsistente con otros modelos |
-| m2 | `server/models/Service.js` | Tiene `timestamps: true`, inconsistente con otros modelos |
-| m3 | Varios modelos | Defaults en campos opcionales (`default: ''`) no están en el spec |
-| m4 | `server/utils/cloudinary.js` | Función usa `fileBuffer` en vez de `filePath` (funciona pero difiere) |
-| m5 | `server/controllers/payment.controller.js` | `generateQR` no retorna `qrText` al cliente, solo `qrDataURL` |
-| m6 | `server/controllers/auth.controller.js` | Console.log en `login` expone emails |
+| m1 | `Room.js` | `timestamps: true` inconsistente con otros modelos |
+| m2 | `Service.js` | `timestamps: true` inconsistente con otros modelos |
+| m3 | Varios modelos | Defaults en campos opcionales no están en el spec |
+| m4 | `cloudinary.js` | Usa `fileBuffer` en vez de `filePath` |
+| m5 | `payment.controller.js` | `generateQR` no retorna `qrText` |
+| m6 | `auth.controller.js` | Console.log en `login` expone emails |
 
 ---
 
-<a id="-erick--fase-1-corrección-de-backend"></a>
-## 🟩 ERICK — FASE 1: Corrección de Backend
+<a id="-resumen-del-frontend-pendiente"></a>
+## 🖥️ RESUMEN DEL FRONTEND PENDIENTE
 
-> **Objetivo:** Dejar el backend 100% funcional antes de que nadie toque el frontend.  
-> **Duración estimada:** 2-3 días  
-> **Prerrequisito:** Haber hecho `git pull origin main`  
+El frontend actual es **100% Vite default** (counter demo). No se ha implementado nada.
 
-### Orden de trabajo
+### Estado de archivos
 
-Cada ítem es un commit separado. Hacer en este orden:
+| Archivo | Estado |
+|---|---|
+| `client/index.html` | ❌ Valores incorrectos (lang, title, body) |
+| `client/src/index.css` | ❌ 110+ líneas de CSS default |
+| `client/src/App.css` | ❌ Debe eliminarse |
+| `client/src/main.jsx` | ⚠️ Estilo diferente al spec |
+| `client/src/App.jsx` | ❌ Es el counter demo de Vite, NO el router |
+| `client/src/services/api.js` | ❌ NO EXISTE |
+| `client/src/context/AuthContext.jsx` | ❌ NO EXISTE |
+| 5 componentes UI | ❌ NO EXISTEN |
+| 3 componentes layout | ❌ NO EXISTEN |
+| 5 páginas públicas | ❌ NO EXISTEN |
+| 3 páginas cliente | ❌ NO EXISTEN |
+| 1 página empleado | ❌ NO EXISTEN |
+| 7 páginas admin | ❌ NO EXISTEN |
+
+**Total: ~30 archivos por crear.**
 
 ---
 
-#### C1 — Corregir registro de usuario (auth.controller.js)
+<a id="-distribución-del-trabajo"></a>
+## 📋 DISTRIBUCIÓN DEL TRABAJO
+
+### En paralelo (simultáneamente)
+
+| Erick | Alejandro |
+|---|---|
+| Corrige TODOS los bugs del backend (C1-C9 + M1-M6) | Crea TODA la infraestructura del frontend + páginas públicas + cliente/empleado |
+
+### Después (secuencial)
+
+| Erick |
+|---|
+| Cuando termine el backend → Crea las 7 páginas admin del frontend |
+
+### Por qué esta distribución
+
+1. **Erick** construyó el backend → conoce los bugs y sabe cómo arreglarlos rápido.
+2. **Alejandro** puede crear el frontend sin depender de que el backend esté arreglado (usa mock data mientras tanto).
+3. **Trabajan en simultáneo** → se ahorra tiempo.
+4. **Erick hace admin después** → ya conoce los endpoints que él mismo arregló, puede conectar el dashboard y las tablas admin sin adivinar.
+
+### Archivos por persona
+
+| Erick (Backend + Admin Pages) | Alejandro (Frontend Core) |
+|---|---|
+| `auth.controller.js` (fix) | `client/index.html` (fix) |
+| `booking.controller.js` (fix) | `client/src/index.css` (fix) |
+| `dashboard.controller.js` (reescribir) | `client/src/App.css` (eliminar) |
+| `dashboard.routes.js` (reescribir) | `client/src/main.jsx` (fix) |
+| `cleaning.controller.js` (fix) | `client/src/services/api.js` (nuevo) |
+| `server/package.json` (nuevo) | `client/src/context/AuthContext.jsx` (nuevo) |
+| `email.js` (implementar stubs) | `client/src/components/ui/*` (5 archivos nuevos) |
+| `index.js` (fix cron) | `client/src/components/layout/*` (3 archivos nuevos) |
+| `payment.controller.js` (fix) | `client/src/pages/public/*` (5 páginas nuevas) |
+| `server/.env` (llenar variables) | `client/src/pages/cliente/*` (3 páginas nuevas) |
+| `admin/DashboardPage.jsx` (nuevo) | `client/src/pages/empleado/*` (1 página nueva) |
+| `admin/AdminRoomsPage.jsx` (nuevo) | |
+| `admin/AdminUsersPage.jsx` (nuevo) | |
+| `admin/AdminServicesPage.jsx` (nuevo) | |
+| `admin/AdminBookingsPage.jsx` (nuevo) | |
+| `admin/AdminCleaningPage.jsx` (nuevo) | |
+| `admin/AdminPaymentsPage.jsx` (nuevo) | |
+| `App.jsx` (montar rutas) | |
+
+---
+
+<a id="-erick--corrección-de-backend"></a>
+## 🟩 ERICK — Corrección de Backend
+
+> **Objetivo:** Dejar el backend 100% funcional.  
+> **Trabaja en paralelo con Alejandro.**  
+> **Cada ítem = 1 commit. Hacer en este orden.**
+
+### Prerrequisito
+
+```bash
+git pull origin main
+```
+
+---
+
+#### C1 — Corregir registro de usuario
 
 **Archivo:** `server/controllers/auth.controller.js`
 
-**Problema:** La línea 23 hace `const { name, email, password, role } = req.body;` y la línea 39 hace `role: role || 'cliente'`. Esto permite que cualquier usuario se registre como admin.
+**Problema:** Acepta `role` del body → cualquiera puede registrarse como admin.
 
 **Fix:**
 
 ```js
-// LÍNEA 23 — Cambiar esto:
+// LÍNEA 23 — Cambiar:
 const { name, email, password, role } = req.body;
-
-// Por esto:
+// Por:
 const { name, email, password } = req.body;
 
-// LÍNEA 39 — Cambiar esto:
+// LÍNEA 39 — Cambiar:
 role: role || 'cliente',
-
-// Por esto:
+// Por:
 role: 'cliente',
 ```
 
@@ -120,16 +203,15 @@ role: 'cliente',
 
 ---
 
-#### C2 — Agregar validación de solapamiento de fechas (booking.controller.js)
+#### C2 — Agregar validación de solapamiento de fechas
 
 **Archivo:** `server/controllers/booking.controller.js`
 
-**Problema:** `createBooking` no verifica si ya existe una reserva que se solape con las fechas seleccionadas.
+**Problema:** No verifica si ya existe una reserva solapada.
 
-**Fix:** Agregar entre el paso 4 (buscar room) y el paso 5 (calcular basePrice) la siguiente validación:
+**Fix:** Agregar después de buscar la room:
 
 ```js
-// Verificar solapamiento de fechas
 const overlappingBooking = await Booking.findOne({
     room: roomId,
     status: { $in: ['confirmada', 'en_curso'] },
@@ -142,8 +224,6 @@ if (overlappingBooking) {
 }
 ```
 
-**Nota:** Importar `Booking` al inicio del archivo si no está importado.
-
 **Commit:** `fix: agregar validación de solapamiento de fechas en createBooking`
 
 ---
@@ -152,15 +232,12 @@ if (overlappingBooking) {
 
 **Archivo:** `server/controllers/dashboard.controller.js`
 
-**Problema:** Solo existe `getDashboardStats`. Faltan `getSummary`, `getOccupancyData`, `getRevenueData`, `getTopRooms`. El status `'ocupada'` debe ser `'ocupado'`.
-
-**Fix:** Reemplazar TODO el contenido de `dashboard.controller.js` con:
+Reemplazar TODO el contenido:
 
 ```js
 const Room = require('../models/Room');
 const Booking = require('../models/Booking');
 const Review = require('../models/Review');
-const Service = require('../models/Service');
 
 const getSummary = async (req, res) => {
     try {
@@ -198,7 +275,7 @@ const getOccupancyData = async (req, res) => {
     try {
         const occupancy = await Room.aggregate([
             { $group: { _id: '$type', total: { $sum: 1 }, occupied: { $sum: { $cond: [{ $eq: ['$status', 'ocupado'] }, 1, 0] } } } },
-            { $project: { _id: 1, total: 1, occupied: 1, percentage: { $multiply: [{ $divide: ['$occupied', '$total'] }, 100] } } }
+            { $project: { _id: 1, total: 1, occupied: 1, percentage: { $multiply: [{ $divide: ['$occupied', { $max: ['$total', 1] }] }, 100] } } }
         ]);
         res.json(occupancy);
     } catch (error) {
@@ -210,7 +287,6 @@ const getRevenueData = async (req, res) => {
     try {
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
         const revenue = await Booking.aggregate([
             { $match: { status: { $in: ['confirmada', 'en_curso', 'completada'] }, createdAt: { $gte: sixMonthsAgo } } },
             { $group: { _id: { $month: '$createdAt' }, total: { $sum: '$totalPrice' } } },
@@ -243,7 +319,7 @@ module.exports = { getSummary, getOccupancyData, getRevenueData, getTopRooms };
 
 **Archivo:** `server/routes/dashboard.routes.js`
 
-**Fix:** Reemplazar TODO el contenido con:
+Reemplazar TODO el contenido:
 
 ```js
 const express = require('express');
@@ -267,29 +343,28 @@ module.exports = router;
 
 **Archivo:** `server/controllers/cleaning.controller.js`
 
-**Fix en `assignTask`:** Agregar verificación de rol del empleado:
+**Fix en `assignTask`** — Agregar verificación de rol:
 
 ```js
-// Después de obtener employeeId y roomId:
+const User = require('../models/User');
+// ...
 const employee = await User.findById(employeeId);
 if (!employee || employee.role !== 'empleado') {
     return res.status(400).json({ message: 'El usuario asignado no es un empleado válido' });
 }
 ```
 
-**Fix en `startTask`:** Agregar verificación de status:
+**Fix en `startTask`** — Verificar status:
 
 ```js
-// Antes de cambiar el status:
 if (task.status !== 'pendiente') {
     return res.status(400).json({ message: 'La tarea debe estar en estado pendiente para iniciarla' });
 }
 ```
 
-**Fix en `completeTask`:** Agregar verificación de status:
+**Fix en `completeTask`** — Verificar status:
 
 ```js
-// Antes de cambiar el status:
 if (task.status !== 'en_progreso') {
     return res.status(400).json({ message: 'La tarea debe estar en progreso para completarla' });
 }
@@ -303,13 +378,10 @@ if (task.status !== 'en_progreso') {
 
 **Archivo nuevo:** `server/package.json`
 
-**Contenido:**
-
 ```json
 {
   "name": "booking-hotel-server",
   "version": "1.0.0",
-  "description": "Backend del sistema hotelero ByteHotel",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
@@ -335,24 +407,24 @@ if (task.status !== 'en_progreso') {
 }
 ```
 
-**Pasos adicionales:**
+Después ejecutar:
 
 ```bash
 cd server
 npm install
 ```
 
-**Eliminar dependencias del package.json raíz:** Quitar `express`, `mongoose`, `dotenv`, `cors`, `bcryptjs`, `jsonwebtoken`, `nodemailer`, `cloudinary`, `multer`, `node-cron`, `axios`, `qrcode` del `package.json` de la raíz. Dejar solo `concurrently` como devDependency.
+Y quitar del `package.json` raíz: `express`, `mongoose`, `dotenv`, `cors`, `bcryptjs`, `jsonwebtoken`, `nodemailer`, `cloudinary`, `multer`, `node-cron`, `axios`, `qrcode`. Dejar solo `concurrently`.
 
 **Commit:** `fix: crear server/package.json y mover dependencias backend`
 
 ---
 
-#### M1 — Implementar emails faltantes (email.js)
+#### M1 — Implementar emails faltantes
 
 **Archivo:** `server/utils/email.js`
 
-**Fix:** Implementar las 3 funciones que son stubs vacíos, siguiendo el mismo patrón de `sendBookingConfirmation`:
+Implementar las 3 funciones vacías siguiendo el patrón de `sendBookingConfirmation`:
 
 ```js
 const sendCheckInReminder = async (userEmail, bookingDetails) => {
@@ -402,14 +474,13 @@ const sendReviewInvitation = async (userEmail, bookingDetails) => {
 
 ---
 
-#### M2 — Agregar email de invitación a calificar en cron de check-out
+#### M2 — Agregar email de review en cron de check-out
 
 **Archivo:** `server/index.js`
 
-En el cron de check-out (00:02), agregar después de cambiar status de booking y room:
+En el cron de check-out (00:02), agregar después de cambiar status:
 
 ```js
-// Enviar email de invitación a calificar
 const { sendReviewInvitation } = require('./utils/email');
 for (const booking of completedBookings) {
     await booking.populate('room', 'number type');
@@ -421,36 +492,21 @@ for (const booking of completedBookings) {
 }
 ```
 
-**Nota:** Ajustar según la estructura actual del cron. Ya está importado `sendReviewInvitation` en el archivo o importarlo.
-
 **Commit:** `feat: agregar envío de email de invitación a calificar en cron de check-out`
 
 ---
 
-#### M6 — Eliminar console.log en login (auth.controller.js)
-
-**Archivo:** `server/controllers/auth.controller.js`
-
-Eliminar o comentar todos los `console.log()` que exponen datos del usuario (email, token).
-
-**Commit:** `fix: eliminar console.log que exponen datos sensibles en login`
-
----
-
-#### M5 — payment.controller.js: retornar qrText además de qrDataURL
+#### M5 — Retornar qrText en generateQR
 
 **Archivo:** `server/controllers/payment.controller.js`
 
-En la función `generateQR`, cambiar:
-
 ```js
-// Cambiar esto:
+// Cambiar:
 const { qrDataURL } = await generateBCBQR(paymentData);
-
-// Por esto:
+// Por:
 const { qrText, qrDataURL } = await generateBCBQR(paymentData);
 
-// Y en el return, agregar qrText:
+// Y en el return agregar qrText:
 res.status(201).json({ payment, qrCode: qrDataURL, qrText });
 ```
 
@@ -458,93 +514,167 @@ res.status(201).json({ payment, qrCode: qrDataURL, qrText });
 
 ---
 
-#### Bugs menores (m1, m2) — No requieren fix inmediato
+#### M6 — Eliminar console.log en login
 
-Los bugs menores (timestamps en Room y Service, defaults en campos opcionales) no bloquean la app. Se pueden dejar como están y corregir después si hay tiempo.
+**Archivo:** `server/controllers/auth.controller.js`
+
+Eliminar todos los `console.log()` que exponen datos del usuario.
+
+**Commit:** `fix: eliminar console.log que exponen datos sensibles en login`
 
 ---
 
-### Checklist de verificación para Erick (después de todos los fixes)
+#### Checklist de verificación (Erick)
 
 ```bash
-# 1. Probar el servidor arranca
-cd server
-npm install
-npm run dev
-# Debe mostrar "MongoDB conectado" y "Servidor corriendo en puerto 5000"
+# 1. Servidor arranca
+cd server && npm install && npm run dev
 
-# 2. Probar registro SIN role (debe crear solo 'cliente')
-POST /api/auth/register   { "name": "test", "email": "test@test.com", "password": "123456" }
-# Verificar que role es 'cliente', NO lo que se envíe en el body
+# 2. Registro sin role → crea solo 'cliente'
+POST /api/auth/register { "name":"test", "email":"test@test.com", "password":"123456" }
 
-# 3. Probar que NO se puede registrar como admin
-POST /api/auth/register   { "name": "hacker", "email": "hacker@test.com", "password": "123456", "role": "admin" }
-# Verificar que role sigue siendo 'cliente'
+# 3. Registro con role: "admin" → IGNORA el role, crea 'cliente'
+POST /api/auth/register { "name":"hacker", "email":"h@h.com", "password":"123456", "role":"admin" }
 
-# 4. Probar login
-POST /api/auth/login   { "email": "test@test.com", "password": "123456" }
-# Guardar el token para los siguientes tests
+# 4. Login funciona
+POST /api/auth/login { "email":"test@test.com", "password":"123456" }
 
-# 5. Probar crear reserva con fechas solapadas (debe fallar)
-POST /api/bookings   { "roomId": "...", "checkIn": "...", "checkOut": "...", "paymentMethod": "qr_simple" }
-# Crear otra reserva con las mismas fechas → debe dar error 400
+# 5. Reserva con fechas solapadas → error 400
+POST /api/bookings { ... mismas fechas que otra reserva ... }
 
-# 6. Probar dashboard endpoints
+# 6. Dashboard endpoints devuelven datos
 GET /api/dashboard/summary
 GET /api/dashboard/occupancy
 GET /api/dashboard/revenue
 GET /api/dashboard/top-rooms
-# Todos deben devolver JSON con datos
 
-# 7. Probar asignar limpieza a un NO-empleado (debe fallar)
-POST /api/cleaning/assign   { "roomId": "...", "employeeId": "<id_de_cliente>" }
-# Debe dar error 400
+# 7. Asignar limpieza a NO-empleado → error 400
+POST /api/cleaning/assign { "roomId":"...", "employeeId":"<id_cliente>" }
 
-# 8. Probar iniciar tarea que no está pendiente (debe fallar)
-PATCH /api/cleaning/<task_id>/start   (cuando task ya está en_progreso)
-# Debe dar error 400
+# 8. Iniciar tarea no pendiente → error 400
+PATCH /api/cleaning/<task_id>/start  (cuando ya está en_progreso)
 ```
 
 ---
 
-<a id="-erick--fase-2-frontend-parte-1"></a>
-## 🟩 ERICK — FASE 2: Frontend (Parte 1)
+<a id="-alejandro--frontend-parte-1"></a>
+## 🟦 ALEJANDRO — Frontend Parte 1
 
-> **Prerrequisito:** Haber terminado todos los fixes de Fase 1. Haber hecho `git pull origin main`.  
-> **Objetivo:** Crear la infraestructura del frontend + componentes base + páginas públicas.  
-> **Duración estimada:** 3-4 días  
+> **Objetivo:** Crear toda la infraestructura del frontend + componentes + páginas públicas + páginas cliente/empleado.  
+> **Trabaja en paralelo con Erick.** Puede empezar AHORA sin esperar a que Erick termine el backend (usa mock data o deja las llamadas API listas para cuando el backend esté arreglado).  
+> **Duración estimada:** 4-5 días  
 
-### Archivos que Erick crea/modifica
+### Prerrequisito
+
+```bash
+git pull origin main
+```
+
+---
+
+### Paso 0 — Correcciones de infraestructura (hacer primero)
+
+#### A0a — Corregir `client/index.html`
+
+```html
+<html lang="es">  <!-- era: lang="en" -->
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteHotel</title>  <!-- era: "client" -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+</head>
+<body class="bg-gray-50 min-h-screen">  <!-- era: sin clases -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+```
+
+**Commit:** `fix: corregir lang, title y body classes en index.html`
+
+#### A0b — Limpiar `client/src/index.css`
+
+Eliminar TODO excepto:
+
+```css
+@import "tailwindcss";
+```
+
+**Commit:** `fix: limpiar index.css dejando solo import de tailwindcss`
+
+#### A0c — Eliminar `client/src/App.css`
+
+```bash
+git rm client/src/App.css
+```
+
+**Commit:** `fix: eliminar App.css default de Vite`
+
+#### A0d — Corregir `client/src/main.jsx`
+
+```jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
+)
+```
+
+**Commit:** `fix: corregir main.jsx`
+
+---
+
+### Archivos que Alejandro crea
 
 | # | Archivo | Descripción |
 |---|---|---|
-| E1 | `client/src/services/api.js` | Instancia de axios + todas las APIs (authAPI, roomAPI, bookingAPI, cleaningAPI, userAPI, serviceAPI, dashboardAPI, paymentAPI) |
-| E2 | `client/src/context/AuthContext.jsx` | Provider con user, token, loading, login(), register(), logout(), auto-verificación de sesión |
-| E3 | `client/src/components/ui/LoadingSpinner.jsx` | Spinner centrado con animate-spin de Tailwind |
-| E4 | `client/src/components/ui/EmptyState.jsx` | Mensaje "No hay datos" con icono Props: message, icon |
-| E5 | `client/src/components/ui/ProtectedRoute.jsx` | Wrapper que verifica autenticación y rol. Props: children, allowedRoles |
-| E6 | `client/src/components/ui/RoomCard.jsx` | Tarjeta de habitación con imagen, tipo, precio, capacidad, estado. Props: room, onClick |
-| E7 | `client/src/components/ui/BookingCard.jsx` | Tarjeta de reserva con habitación, fechas, estado, precio. Props: booking, onCancel, onReview |
-| E8 | `client/src/components/layout/Navbar.jsx` | Barra de navegación responsiva con links según rol. Menú hamburguesa en móvil |
-| E9 | `client/src/components/layout/Footer.jsx` | Footer con copyright y links |
-| E10 | `client/src/components/layout/Layout.jsx` | Wrapper: Navbar + children + Footer |
-| E11 | `client/src/pages/public/HomePage.jsx` | Hero section, servicios destacados, habitaciones populares, CTA |
-| E12 | `client/src/pages/public/RoomsPage.jsx` | Filtros (tipo, precio, capacidad) + grid de RoomCards |
-| E13 | `client/src/pages/public/RoomDetailPage.jsx` | Galería, info, servicios, calendario de fechas, cálculo de precio, botón reservar |
-| E14 | `client/src/pages/public/LoginPage.jsx` | Formulario login con email/password. Link a register |
-| E15 | `client/src/pages/public/RegisterPage.jsx` | Formulario register con name/email/password/confirmPassword |
+| A1 | `client/src/services/api.js` | Axios instance + 8 API objects |
+| A2 | `client/src/context/AuthContext.jsx` | AuthProvider con login, register, logout |
+| A3 | `client/src/components/ui/LoadingSpinner.jsx` | Spinner con animate-spin |
+| A4 | `client/src/components/ui/EmptyState.jsx` | Mensaje "No hay datos" |
+| A5 | `client/src/components/ui/ProtectedRoute.jsx` | Wrapper de autenticación y rol |
+| A6 | `client/src/components/ui/RoomCard.jsx` | Tarjeta de habitación |
+| A7 | `client/src/components/ui/BookingCard.jsx` | Tarjeta de reserva |
+| A8 | `client/src/components/layout/Navbar.jsx` | Barra de navegación responsiva |
+| A9 | `client/src/components/layout/Footer.jsx` | Footer |
+| A10 | `client/src/components/layout/Layout.jsx` | Wrapper Navbar + children + Footer |
+| A11 | `client/src/pages/public/HomePage.jsx` | Hero, servicios, habitaciones populares |
+| A12 | `client/src/pages/public/RoomsPage.jsx` | Filtros + grid de RoomCards |
+| A13 | `client/src/pages/public/RoomDetailPage.jsx` | Galería, info, calendario, reservar |
+| A14 | `client/src/pages/public/LoginPage.jsx` | Formulario login |
+| A15 | `client/src/pages/public/RegisterPage.jsx` | Formulario register |
+| A16 | `client/src/pages/cliente/BookingConfirmPage.jsx` | Resumen + pago real (QR/Tigo/Transferencia/Efectivo) |
+| A17 | `client/src/pages/cliente/MyBookingsPage.jsx` | Historial + cancelar + calificar |
+| A18 | `client/src/pages/cliente/ProfilePage.jsx` | Datos del usuario + editar |
+| A19 | `client/src/pages/empleado/CleaningPanelPage.jsx` | Tareas de limpieza |
+
+---
 
 ### Instrucciones detalladas
 
 ---
 
-#### E1 — `client/src/services/api.js`
+#### A1 — `client/src/services/api.js`
 
-Crear instancia de axios con baseURL `/api` (usa el proxy de Vite). Interceptor para añadir token JWT del localStorage al header Authorization.
-
-Exportar 8 objetos de API:
+Instancia de axios con `baseURL: '/api'`. Interceptor para JWT. 8 objetos de API:
 
 ```js
+import axios from 'axios';
+
+const api = axios.create({ baseURL: '/api' });
+
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
 export const authAPI = {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
@@ -606,144 +736,173 @@ export const paymentAPI = {
     getAll: (params) => api.get('/payments', { params }),
     verify: (id) => api.post(`/payments/${id}/verify`),
 };
+
+export default api;
 ```
 
 **Commit:** `feat: crear servicio de API con 8 objetos de endpoints`
 
 ---
 
-#### E2 — `client/src/context/AuthContext.jsx`
+#### A2 — `client/src/context/AuthContext.jsx`
 
-Provider con useState para `user`, `token`, `loading`. Funciones: `login()`, `register()`, `logout()`. Efecto al montar: si hay token en localStorage, llamar a `authAPI.getMe()` para restaurar sesión.
+Provider con:
+- `user` (null si no autenticado)
+- `token` (de localStorage)
+- `loading` (true mientras verifica)
+- `login(email, password)` → authAPI.login(), guarda token, guarda user
+- `register(name, email, password)` → authAPI.register(), guarda token
+- `logout()` → limpia localStorage, user a null
+- useEffect al montar: si hay token → authAPI.getMe() para restaurar sesión
 
 **Commit:** `feat: crear AuthContext con login, register, logout y auto-verificación`
 
 ---
 
-#### E3-E7 — Componentes UI
+#### A3-A7 — Componentes UI
 
-Cada componente en su archivo correspondiente. Seguir las especs del README original (secciones 6-10 para Alejandro).
-
-- `LoadingSpinner.jsx`: `<div className="flex items-center justify-center min-h-[200px]"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>`
-- `EmptyState.jsx`: Props `message`, `icon`. Mostrar icono + mensaje centrado.
-- `ProtectedRoute.jsx`: Si no autenticado → redirigir a `/login`. Si no tiene rol → mensaje "No autorizado". Si tiene rol permitido → renderizar children.
-- `RoomCard.jsx`: Card con imagen, number, type (badge), pricePerNight, capacity, status (badge de colores). Botón "Ver detalle" que llama a `onClick(room)`.
-- `BookingCard.jsx`: Card con room number, checkIn/checkOut, status (badge con colores), totalPrice. Botones condicionales: Cancelar (si pendiente), Calificar (si completada sin review).
+| Componente | Props | Comportamiento |
+|---|---|---|
+| `LoadingSpinner` | — | `<div className="flex justify-center items-center min-h-[200px]"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>` |
+| `EmptyState` | `message`, `icon` | Icono + mensaje centrado |
+| `ProtectedRoute` | `children`, `allowedRoles` | Si no autenticado → redirect `/login`. Si no tiene rol → "No autorizado". Si OK → children |
+| `RoomCard` | `room`, `onClick` | Imagen, number, type badge, pricePerNight, capacity, status badge, botón "Ver detalle" |
+| `BookingCard` | `booking`, `onCancel`, `onReview` | Room number, checkIn/checkOut, status badge, totalPrice. Botón Cancelar (si pendiente), Calificar (si completada sin review) |
 
 **Commit por componente:** `feat: crear componente [nombre]`
 
 ---
 
-#### E8-E10 — Componentes Layout
+#### A8-A10 — Componentes Layout
 
-- `Navbar.jsx`: Logo "ByteHotel" a la izquierda. Links según rol:
+**Navbar.jsx:**
+- Logo "ByteHotel" a la izquierda
+- Links según rol:
   - No autenticado: Home, Habitaciones, Login, Register
   - Cliente: Home, Habitaciones, Mis Reservas, Perfil, Logout
   - Empleado: Panel Limpieza, Logout
   - Admin: Dashboard, Habitaciones, Reservas, Usuarios, Servicios, Limpieza, Pagos, Logout
-  - Menú hamburguesa en móvil
-- `Footer.jsx`: `<footer className="bg-gray-800 text-white text-center py-4 mt-auto">© 2025 ByteHotel. Todos los derechos reservados.</footer>`
-- `Layout.jsx`: `<div className="min-h-screen flex flex-col"><Navbar /><main className="flex-grow"><Outlet /></main><Footer /></div>`
+- Menú hamburguesa en móvil
+
+**Footer.jsx:**
+```jsx
+<footer className="bg-gray-800 text-white text-center py-4 mt-auto">
+    © 2025 ByteHotel. Todos los derechos reservados.
+</footer>
+```
+
+**Layout.jsx:**
+```jsx
+import { Outlet } from 'react-router-dom';
+import Navbar from './Navbar';
+import Footer from './Footer';
+
+export default function Layout() {
+    return (
+        <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-grow">
+                <Outlet />
+            </main>
+            <Footer />
+        </div>
+    );
+}
+```
 
 **Commit por componente:** `feat: crear componente layout [nombre]`
 
 ---
 
-#### E11-E15 — Páginas Públicas
+#### A11-A15 — Páginas Públicas
 
-- `HomePage.jsx`: Hero section con imagen de fondo y CTA "Ver habitaciones", sección de servicios con iconos (usar react-icons), grid de 4 RoomCards con habitaciones populares.
-- `RoomsPage.jsx`: Sidebar de filtros (tipo select, precio min/max, capacidad select). Grid de RoomCards. Al hacer clic en una → `/habitaciones/:id`.
-- `RoomDetailPage.jsx`: Usar `useParams()` para obtener `:id`. Fetch con `roomAPI.getById(id)`. Galería de imágenes (simple grid). Info: number, type badge, pricePerNight, capacity, description, services. Calendario con react-datepicker (rango de fechas). Cálculo dinámico: nights × pricePerNight = subtotal. Botón "Reservar ahora" → navegar a `/reservar` con state.
-- `LoginPage.jsx`: Formulario con email y password. Validar campos vacíos. Llamar a `authAPI.login()`. Guardar token en localStorage. Redirigir según rol. Toast de éxito/error con react-hot-toast.
-- `RegisterPage.jsx`: Formulario con name, email, password, confirmPassword. Validar. Llamar a `authAPI.register()`. Guardar token. Redirigir a home. Link a login.
+| Página | Descripción |
+|---|---|
+| `HomePage.jsx` | Hero section con CTA "Ver habitaciones", grid de servicios con iconos (react-icons), grid de 4 RoomCards populares |
+| `RoomsPage.jsx` | Sidebar de filtros (tipo select, precio min/max, capacidad select). Grid de RoomCards. Click → `/habitaciones/:id` |
+| `RoomDetailPage.jsx` | `useParams()` → `roomAPI.getById(id)`. Galería de imágenes, info (number, type badge, price, capacity, description), servicios con iconos, calendario react-datepicker (rango), cálculo nights × price, botón "Reservar ahora" → `/reservar` con state |
+| `LoginPage.jsx` | Formulario email + password. Validar vacíos. `authAPI.login()`. Guardar token. Redirigir según rol. Toast react-hot-toast |
+| `RegisterPage.jsx` | Formulario name + email + password + confirmPassword. `authAPI.register()`. Guardar token. Redirigir. Link a login |
 
 **Commit por página:** `feat: crear página pública [nombre]`
 
 ---
 
-<a id="-alejandro--fase-2-frontend-parte-2"></a>
-## 🟦 ALEJANDRO — FASE 2: Frontend (Parte 2)
+#### A16 — `client/src/pages/cliente/BookingConfirmPage.jsx`
 
-> **Prerrequisito:** Haber hecho `git pull origin main`. Erick ya debe haber pusheado api.js, AuthContext y componentes UI/Layout. Alejandro puede empezar en paralelo usando mock data.  
-> **Objetivo:** Crear todas las páginas protegidas (cliente, empleado, admin).  
-> **Duración estimada:** 4-5 días  
+**PÁGINA MÁS IMPORTANTE.** Recibe roomId, checkIn, checkOut por `location.state`.
 
-### Primero: Correcciones menores de infraestructura
+Secciones:
+1. Resumen habitación (imagen, number, type badge)
+2. Fechas seleccionadas (check-in, check-out, noches)
+3. Precio base (pricePerNight × nights)
+4. Servicios adicionales (checkboxes con price, suman al total)
+5. **Total a pagar** (en Bs., grande y destacado)
+6. **Métodos de pago REALES** (NO simulación):
+   - **QR Simple (BCB)**: radio button → `paymentAPI.generateQR({ bookingId })` → muestra QR. Texto: "Escanee este QR con la app de su banco."
+   - **Tigo Money**: radio button → `paymentAPI.registerTigoMoney({ bookingId })` → muestra nro Tigo Money + monto. Texto: "Transfiera Bs. [monto] al [número]."
+   - **Transferencia**: radio button → muestra datos bancarios. Botón subir comprobante → `paymentAPI.uploadComprobante(id, formData)`
+   - **Efectivo**: radio button → "Puede pagar en efectivo en la recepción del hotel."
+7. Botón "Confirmar Reserva" → `bookingAPI.create(data)` → toast éxito → redirect `/mis-reservas`
 
-Antes de empezar con las páginas, Alejandro debe hacer estas correcciones rápidas:
-
----
-
-#### A0a — Corregir `client/index.html`
-
-```html
-<!-- Cambiar estos valores: -->
-<html lang="es">  <!-- era: lang="en" -->
-<title>ByteHotel</title>  <!-- era: title="client" -->
-<link rel="icon" type="image/svg+xml" href="/vite.svg" />
-<body class="bg-gray-50 min-h-screen">  <!-- era: sin clases -->
-```
-
-**Commit:** `fix: corregir lang, title y body classes en index.html`
+**Commit:** `feat: crear BookingConfirmPage con métodos de pago reales`
 
 ---
 
-#### A0b — Limpiar `client/src/index.css`
+#### A17 — `client/src/pages/cliente/MyBookingsPage.jsx`
 
-Eliminar TODO el contenido excepto la primera línea. El archivo debe quedar así:
+- `bookingAPI.getMyBookings()`
+- Lista de BookingCards
+- Botón Cancelar (si pendiente) → `bookingAPI.cancel(id)`
+- Botón Calificar (si completada sin review) → modal con estrellas 1-5 + textarea → `bookingAPI.createReview(id, { rating, comment })`
 
-```css
-@import "tailwindcss";
-```
-
-**Commit:** `fix: limpiar index.css dejando solo import de tailwindcss`
-
----
-
-#### A0c — Eliminar `client/src/App.css`
-
-Borrar el archivo `client/src/App.css` completamente.
-
-**Commit:** `fix: eliminar App.css default de Vite`
+**Commit:** `feat: crear MyBookingsPage con cancelar y calificar`
 
 ---
 
-#### A0d — Corregir `client/src/main.jsx` (si es necesario)
+#### A18 — `client/src/pages/cliente/ProfilePage.jsx`
 
-Verificar que traiga correctamente App y Tailwind:
+- `authAPI.getMe()`
+- Mostrar name, email, phone, role badge
+- Botón editar → formulario name + phone
+- Botón cambiar contraseña → modal (actual, nueva, confirmar)
+- Toast éxito/error
 
-```jsx
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-)
-```
-
-**Commit (si se cambió):** `fix: corregir main.jsx`
+**Commit:** `feat: crear ProfilePage`
 
 ---
 
-### Archivos que Alejandro crea
+#### A19 — `client/src/pages/empleado/CleaningPanelPage.jsx`
+
+- `cleaningAPI.getMyTasks()`
+- Lista de tareas: habitación number, tipo, status badge
+- Pendiente → botón verde "Iniciar limpieza" → `cleaningAPI.start(id)`
+- En progreso → botón azul "Completar limpieza" → `cleaningAPI.complete(id)`
+- Completada → texto gris "Completada"
+- Toast al completar
+
+**Commit:** `feat: crear CleaningPanelPage para empleados`
+
+---
+
+<a id="-erick--frontend-parte-2"></a>
+## 🟩 ERICK — Frontend Parte 2
+
+> **Prerrequisito:** Haber terminado TODOS los fixes de backend (C1-C9 + M1-M6). Hacer `git pull origin main`.  
+> **Objetivo:** Crear las 7 páginas admin + App.jsx con todas las rutas.  
+> **Duración estimada:** 3-4 días  
+
+### Archivos que Erick crea
 
 | # | Archivo | Descripción |
 |---|---|---|
-| A1 | `client/src/pages/cliente/BookingConfirmPage.jsx` | Resumen de reserva, selección de método de pago real (QR/Tigo/Transferencia/Efectivo) |
-| A2 | `client/src/pages/cliente/MyBookingsPage.jsx` | Historial de reservas con cancelar y calificar |
-| A3 | `client/src/pages/cliente/ProfilePage.jsx` | Datos del usuario, editar nombre/teléfono, cambiar contraseña |
-| A4 | `client/src/pages/empleado/CleaningPanelPage.jsx` | Lista de tareas de limpieza con botones iniciar/completar |
-| A5 | `client/src/pages/admin/DashboardPage.jsx` | Cards de métricas + gráficos Recharts (dona, barras) |
-| A6 | `client/src/pages/admin/AdminRoomsPage.jsx` | Tabla CRUD de habitaciones con modales |
-| A7 | `client/src/pages/admin/AdminUsersPage.jsx` | Tabla CRUD de usuarios con selector de rol |
-| A8 | `client/src/pages/admin/AdminServicesPage.jsx` | Tabla CRUD de servicios |
-| A9 | `client/src/pages/admin/AdminBookingsPage.jsx` | Tabla de todas las reservas con filtros y cambio de estado |
-| A10 | `client/src/pages/admin/AdminCleaningPage.jsx` | Tabla de tareas de limpieza, botón asignar |
-| A11 | `client/src/pages/admin/AdminPaymentsPage.jsx` | Tabla de pagos con filtros, botón verificar pago |
+| E1 | `client/src/pages/admin/DashboardPage.jsx` | 4 cards métricas + 3 gráficos Recharts |
+| E2 | `client/src/pages/admin/AdminRoomsPage.jsx` | Tabla CRUD habitaciones con modales |
+| E3 | `client/src/pages/admin/AdminUsersPage.jsx` | Tabla CRUD usuarios con selector rol |
+| E4 | `client/src/pages/admin/AdminServicesPage.jsx` | Tabla CRUD servicios |
+| E5 | `client/src/pages/admin/AdminBookingsPage.jsx` | Tabla reservas con filtros y cambio estado |
+| E6 | `client/src/pages/admin/AdminCleaningPage.jsx` | Tabla tareas limpieza, botón asignar |
+| E7 | `client/src/pages/admin/AdminPaymentsPage.jsx` | Tabla pagos, botón verificar |
 
 ---
 
@@ -751,97 +910,37 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 ---
 
-#### A1 — `client/src/pages/cliente/BookingConfirmPage.jsx`
+#### E1 — `client/src/pages/admin/DashboardPage.jsx`
 
-**Página MÁS IMPORTANTE del flujo de reserva.** Recibe roomId, checkIn, checkOut por `location.state` o query params.
-
-Secciones:
-1. **Resumen de la habitación** — Image, number, type badge
-2. **Fechas seleccionadas** — Check-in, check-out, noches totales
-3. **Precio base** — room.pricePerNight × nights
-4. **Servicios adicionales** — Checkboxes con name, description, price. Al marcar, se suma al total
-5. **Total a pagar** — Grande y destacado (en Bs.)
-6. **Selección de método de pago REAL** (NO simulación):
-   - Radio buttons: QR Simple (BCB), Tigo Money, Transferencia Bancaria, Efectivo
-   - **QR Simple**: Al seleccionar → llama a `paymentAPI.generateQR({ bookingId })` → muestra QR generado. Texto: "Escanee este QR con la app de su banco."
-   - **Tigo Money**: Al seleccionar → llama a `paymentAPI.registerTigoMoney({ bookingId })` → muestra número Tigo Money del hotel y monto. Texto: "Transfiera Bs. [monto] al [número]."
-   - **Transferencia**: Al seleccionar → muestra datos bancarios (del .env vía API si existe, o hardcodear temporalmente). Botón para subir comprobante con `paymentAPI.uploadComprobante(id, formData)`.
-   - **Efectivo**: Al seleccionar → muestra "Puede pagar en efectivo en la recepción del hotel."
-7. **Botón "Confirmar Reserva"** → Llama a `bookingAPI.create(data)` con método de pago seleccionado. Toast de éxito. Redirige a `/mis-reservas`.
-
-**Commit:** `feat: crear BookingConfirmPage con métodos de pago reales`
-
----
-
-#### A2 — `client/src/pages/cliente/MyBookingsPage.jsx`
-
-- Título "Mis Reservas"
-- Fetch con `bookingAPI.getMyBookings()`
-- Lista de BookingCards
-- Cada card: botón "Cancelar" si status pendiente, botón "Calificar" si completada sin review
-- Modal para escribir review (estrellas 1-5 + comentario textarea)
-- Al calificar: `bookingAPI.createReview(bookingId, { rating, comment })`
-
-**Commit:** `feat: crear MyBookingsPage con cancelar y calificar`
-
----
-
-#### A3 — `client/src/pages/cliente/ProfilePage.jsx`
-
-- Fetch con `authAPI.getMe()`
-- Mostrar name, email, phone, role (badge)
-- Botón editar → formulario para name y phone
-- Botón cambiar contraseña → modal con password actual, nueva password, confirmar
-- Toast de éxito/error
-
-**Commit:** `feat: crear ProfilePage`
-
----
-
-#### A4 — `client/src/pages/empleado/CleaningPanelPage.jsx`
-
-- Fetch con `cleaningAPI.getMyTasks()`
-- Lista de tareas con: número de habitación, tipo, status badge
-- Si pendiente → botón verde "Iniciar limpieza" → `cleaningAPI.start(taskId)`
-- Si en_progreso → botón azul "Completar limpieza" → `cleaningAPI.complete(taskId)`
-- Si completada → texto gris "Completada"
-- Toast al completar
-
-**Commit:** `feat: crear CleaningPanelPage para empleados`
-
----
-
-#### A5 — `client/src/pages/admin/DashboardPage.jsx`
-
-- 4 cards superiores: Ocupación (%), Ingresos del mes (Bs.), Reservas activas (n), Calificación promedio (★)
+- 4 cards superiores: Ocupación (%), Ingresos del mes (Bs.), Reservas activas, Calificación promedio (★)
 - Fetch con `dashboardAPI.getSummary()`
 - 3 gráficos con Recharts:
-  - Gráfico de dona: Ocupación por tipo → `dashboardAPI.getOccupancyData()`
-  - Gráfico de barras: Ingresos mensuales → `dashboardAPI.getRevenueData()`
-  - Gráfico de barras horizontal: Top 5 habitaciones → `dashboardAPI.getTopRooms()`
+  - **Dona:** Ocupación por tipo → `dashboardAPI.getOccupancy()`
+  - **Barras:** Ingresos mensuales → `dashboardAPI.getRevenue()`
+  - **Barras horizontal:** Top 5 habitaciones → `dashboardAPI.getTopRooms()`
 
 **Commit:** `feat: crear DashboardPage con métricas y gráficos`
 
 ---
 
-#### A6 — `client/src/pages/admin/AdminRoomsPage.jsx`
+#### E2 — `client/src/pages/admin/AdminRoomsPage.jsx`
 
-- Fetch con `roomAPI.getAll()` y `serviceAPI.getAll()`
-- Tabla: Número, Tipo (badge), Precio, Capacidad, Estado (badge), Acciones
-- Botón "Añadir habitación" → modal con formulario (number, type select, pricePerNight, capacity, description, services checkboxes)
+- `roomAPI.getAll()` + `serviceAPI.getAll()`
+- Tabla: Número, Tipo badge, Precio, Capacidad, Estado badge, Acciones
+- Botón "Añadir" → modal (number, type select, pricePerNight, capacity, description, services checkboxes)
 - Botón editar → modal pre-llenado
 - Botón eliminar → confirmación
-- Botón cambiar estado → select
+- Cambiar estado → select
 
 **Commit:** `feat: crear AdminRoomsPage con CRUD`
 
 ---
 
-#### A7 — `client/src/pages/admin/AdminUsersPage.jsx`
+#### E3 — `client/src/pages/admin/AdminUsersPage.jsx`
 
-- Fetch con `userAPI.getAll()`
-- Tabla: Nombre, Email, Rol (badge: cliente=azul, empleado=verde, admin=rojo), Teléfono, Acciones
-- Botón "Crear usuario" → modal con name, email, password, role (select), phone
+- `userAPI.getAll()`
+- Tabla: Nombre, Email, Rol badge, Teléfono, Acciones
+- Botón "Crear usuario" → modal (name, email, password, role select, phone)
 - Botón eliminar → confirmación
 - No permite eliminarse a sí mismo
 
@@ -849,11 +948,11 @@ Secciones:
 
 ---
 
-#### A8 — `client/src/pages/admin/AdminServicesPage.jsx`
+#### E4 — `client/src/pages/admin/AdminServicesPage.jsx`
 
-- Fetch con `serviceAPI.getAll()`
+- `serviceAPI.getAll()`
 - Tabla: Icono, Nombre, Descripción, Precio (Bs.), Acciones
-- Botón "Añadir servicio" → modal con name, description, price, icon
+- Botón "Añadir" → modal (name, description, price, icon)
 - Botón editar → modal pre-llenado
 - Botón eliminar → confirmación
 
@@ -861,107 +960,265 @@ Secciones:
 
 ---
 
-#### A9 — `client/src/pages/admin/AdminBookingsPage.jsx`
+#### E5 — `client/src/pages/admin/AdminBookingsPage.jsx`
 
-- Fetch con `bookingAPI.getAll()`
-- Tabla: Cliente, Habitación, Check-in, Check-out, Total (Bs.), Estado (badge), Acciones
-- Filtros por estado (select)
-- Botón cambiar estado → select en la fila (pendiente→confirmada, confirmada→en_curso, etc.)
+- `bookingAPI.getAll()`
+- Tabla: Cliente, Habitación, Check-in, Check-out, Total (Bs.), Estado badge, Acciones
+- Filtro por estado (select)
+- Cambiar estado → select en la fila
 
 **Commit:** `feat: crear AdminBookingsPage con filtros`
 
 ---
 
-#### A10 — `client/src/pages/admin/AdminCleaningPage.jsx`
+#### E6 — `client/src/pages/admin/AdminCleaningPage.jsx`
 
-- Fetch con `cleaningAPI.getAll()` y `userAPI.getAll({ role: 'empleado' })` (para dropdown)
-- Tabla: Habitación, Empleado, Estado (badge), Inicio, Fin, Duración
-- Botón "Asignar tarea" → modal: select habitación (solo sucias), select empleado (solo empleados)
-- Card superior: tiempo promedio de limpieza
+- `cleaningAPI.getAll()` + `userAPI.getAll({ role: 'empleado' })`
+- Tabla: Habitación, Empleado, Estado badge, Inicio, Fin, Duración
+- Botón "Asignar tarea" → modal: select habitación (solo sucias), select empleado
+- Card: tiempo promedio de limpieza
 
 **Commit:** `feat: crear AdminCleaningPage con asignación de tareas`
 
 ---
 
-#### A11 — `client/src/pages/admin/AdminPaymentsPage.jsx`
+#### E7 — `client/src/pages/admin/AdminPaymentsPage.jsx`
 
-- Fetch con `paymentAPI.getAll()`
-- Tabla: ID Reserva, Cliente, Método (badge: QR Simple=verde, Tigo Money=azul, Transferencia=amarillo, Efectivo=gris), Monto (Bs.), Estado (badge: pendiente=naranja, completado=verde, fallido=rojo), Fecha
+- `paymentAPI.getAll()`
+- Tabla: ID Reserva, Cliente, Método badge, Monto (Bs.), Estado badge, Fecha
 - Filtros por método y estado
-- Botón "Verificar pago" en filas con estado pendiente → modal con detalle:
-  - QR Simple: monto, fecha, botón "Confirmar pago" → `paymentAPI.verify(id)`
-  - Tigo Money: número, monto, botón "Confirmar pago" → `paymentAPI.verify(id)`
-  - Transferencia: datos bancarios, comprobante (imagen si existe), botón "Confirmar pago" → `paymentAPI.verify(id)`
-  - Efectivo: botón "Confirmar cobro en recepción" → `paymentAPI.verify(id)`
-- Al confirmar: toast éxito, actualizar tabla
+- Botón "Verificar pago" (si pendiente) → modal con detalle según método → `paymentAPI.verify(id)` → toast éxito
 
 **Commit:** `feat: crear AdminPaymentsPage con verificación de pagos`
 
 ---
 
-<a id="-alex--fase-2-frontend-parte-3"></a>
-## 🟨 ALEX — FASE 2: Frontend (Parte 3)
+<a id="-archivo-final-appjsx"></a>
+## 🔧 ARCHIVO FINAL: App.jsx
 
-> **NOTA:** Si Alex se incorpora, se le asignan los componentes y páginas que Alejandro no pueda terminar. Si Alex no se incorpora, Alejandro asume todo el bloque A.
+> **Este archivo se crea AL FINAL, cuando AMBOS hayan terminado.**  
+> **Lo crea el que termine último o lo acuerdan entre ambos.**
 
-**Si Alex se incorpora, se le asigna:**
+### `client/src/App.jsx`
 
-| # | Archivo | Descripción |
-|---|---|---|
-| X1 | `client/src/pages/admin/DashboardPage.jsx` | Si Alejandro no lo terminó |
-| X2 | `client/src/pages/admin/AdminPaymentsPage.jsx` | Si Alejandro no lo terminó |
-| X3 | `client/src/App.jsx` | Montar todas las rutas con BrowserRouter, AuthProvider, Layout, ProtectedRoute |
-| X4 | `client/src/main.jsx` | Renderizar App con StrictMode |
-| X5 | `client/index.html` | Corregir lang, title, body classes |
+```jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/ui/ProtectedRoute';
+
+import HomePage from './pages/public/HomePage';
+import RoomsPage from './pages/public/RoomsPage';
+import RoomDetailPage from './pages/public/RoomDetailPage';
+import LoginPage from './pages/public/LoginPage';
+import RegisterPage from './pages/public/RegisterPage';
+import BookingConfirmPage from './pages/cliente/BookingConfirmPage';
+import MyBookingsPage from './pages/cliente/MyBookingsPage';
+import ProfilePage from './pages/cliente/ProfilePage';
+import CleaningPanelPage from './pages/empleado/CleaningPanelPage';
+import DashboardPage from './pages/admin/DashboardPage';
+import AdminRoomsPage from './pages/admin/AdminRoomsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminServicesPage from './pages/admin/AdminServicesPage';
+import AdminBookingsPage from './pages/admin/AdminBookingsPage';
+import AdminCleaningPage from './pages/admin/AdminCleaningPage';
+import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
+
+function App() {
+    return (
+        <AuthProvider>
+            <BrowserRouter>
+                <Routes>
+                    <Route element={<Layout />}>
+                        {/* Públicas */}
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/habitaciones" element={<RoomsPage />} />
+                        <Route path="/habitaciones/:id" element={<RoomDetailPage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/register" element={<RegisterPage />} />
+
+                        {/* Cliente */}
+                        <Route path="/reservar" element={
+                            <ProtectedRoute allowedRoles={['cliente']}>
+                                <BookingConfirmPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/mis-reservas" element={
+                            <ProtectedRoute allowedRoles={['cliente']}>
+                                <MyBookingsPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/perfil" element={
+                            <ProtectedRoute allowedRoles={['cliente']}>
+                                <ProfilePage />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* Empleado */}
+                        <Route path="/panel-limpieza" element={
+                            <ProtectedRoute allowedRoles={['empleado']}>
+                                <CleaningPanelPage />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* Admin */}
+                        <Route path="/admin" element={
+                            <ProtectedRoute allowedRoles={['admin']}>
+                                <DashboardPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/admin/habitaciones" element={
+                            <ProtectedRoute allowedRoles={['admin']}>
+                                <AdminRoomsPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/admin/usuarios" element={
+                            <ProtectedRoute allowedRoles={['admin']}>
+                                <AdminUsersPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/admin/servicios" element={
+                            <ProtectedRoute allowedRoles={['admin']}>
+                                <AdminServicesPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/admin/reservas" element={
+                            <ProtectedRoute allowedRoles={['admin']}>
+                                <AdminBookingsPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/admin/limpieza" element={
+                            <ProtectedRoute allowedRoles={['admin']}>
+                                <AdminCleaningPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/admin/pagos" element={
+                            <ProtectedRoute allowedRoles={['admin']}>
+                                <AdminPaymentsPage />
+                            </ProtectedRoute>
+                        } />
+                    </Route>
+                </Routes>
+            </BrowserRouter>
+        </AuthProvider>
+    );
+}
+
+export default App;
+```
+
+**Commit:** `feat: crear App.jsx con todas las rutas`
 
 ---
 
-## FLUJO DE TRABAJO
+<a id="-flujo-de-trabajo"></a>
+## 🔄 FLUJO DE TRABAJO
 
 ```
-Día 1-2: ERICK → Fase 1 (corregir todos los bugs del backend)
-    ↓
-    git push origin main
-    ↓
-Día 2-3: ALEJANDRO → git pull → Hacer A0a-A0d (correcciones menores)
-    ↓
-Día 3+: ERICK y ALEJANDRO trabajan EN PARALELO
-    ├── ERICK → E1-E15 (api.js, AuthContext, componentes, páginas públicas)
-    ├── ALEJANDRO → A1-A11 (páginas cliente, empleado, admin)
-    ↓
-    Ambos hacen git pull frecuentemente
-    ↓
-Día 6-7: ÚLTIMO
-    ├── ERICK → A1-A11 si Alex no se incorpora (o lo que falte)
-    ├── ALEJANDRO → X3-X5 (App.jsx, main.jsx, index.html)
-    ↓
-    Probar flujo completo: registro → login → habitaciones → reservar → pagar → admin verifica
-    ↓
-    Commit final y push
+╔═══════════════════════════════════════════════════════════════╗
+║                    TRABAJO EN PARALELO                        ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  ERICK                           ALEJANDRO                    ║
+║  ─────                           ─────────                    ║
+║  Día 1-3:                        Día 1-5:                    ║
+║  C1 → C2 → C3/C4/C5             A0a → A0b → A0c → A0d       ║
+║  → C6/C7/C8 → C9                → A1 → A2 → A3-A7           ║
+║  → M1 → M2 → M5 → M6           → A8-A10 → A11-A15           ║
+║                                  → A16 → A17 → A18 → A19     ║
+║  push al terminar cada fix       push al terminar cada archivo║
+║                                                               ║
+╠═══════════════════════════════════════════════════════════════╣
+║                    TRABAJO SECUENCIAL                         ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  ERICK (después de terminar backend):                         ║
+║  Día 4-7:                                                     ║
+║  git pull → E1 → E2 → E3 → E4 → E5 → E6 → E7               ║
+║                                                               ║
+║  AMBOS (cuando terminen):                                     ║
+║  Acordar quién crea App.jsx y hacer test final                ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
+
+### Secuencia paso a paso
+
+| Paso | Erick | Alejandro | Nota |
+|---|---|---|---|
+| 1 | `git pull origin main` | `git pull origin main` | Ambos parten del mismo punto |
+| 2 | C1, C2, C3/C4/C5, C6/C7/C8, C9, M1, M2, M5, M6 | A0a, A0b, A0c, A0d, A1, A2 | **En paralelo** |
+| 3 | push → "Backend arreglado" | A3-A10 (componentes) | Alejandro sigue sin backend |
+| 4 | `git pull` (trae cambios de Alejandro) | `git pull` (trae fixes de Erick) | Sincronizar |
+| 5 | E1-E7 (páginas admin) | A11-A19 (páginas + cliente/empleado) | **En paralelo** |
+| 6 | push | push | Ambos terminaron |
+| 7 | **Acordar quién crea App.jsx** | — | El que termine primero lo hace |
+| 8 | `git pull` + test final | `git pull` + test final | Verificar todo funciona |
 
 ### Reglas de coordinación
 
-1. **ERICK hace push primero** (después de corregir bugs). Alejandro hace `git pull` antes de empezar.
-2. **ERICK pushea api.js y AuthContext primero** (E1-E2). Alejandro necesita estos archivos.
-3. **Ambos hacen pull frecuentemente** (mínimo 2 veces al día).
-4. **Commits atómicos:** 1 archivo = 1 commit con mensaje descriptivo.
-5. **Si hay conflicto:** Comunicar por el grupo inmediatamente.
-6. **No tocar archivos del otro sin pedir permiso.**
+| # | Regla |
+|---|---|
+| 1 | **Erick hace push primero** (después de C9). Alejandro hace `git pull`. |
+| 2 | **Alejandro pushea A1 (api.js) y A2 (AuthContext) primero.** Erick necesita estos para las páginas admin. |
+| 3 | **Ambos hacen pull mínimo 2 veces al día.** |
+| 4 | **1 archivo = 1 commit.** Mensajes descriptivos. |
+| 5 | **Si hay conflicto:** Comunicar por el grupo inmediatamente. |
+| 6 | **No tocar archivos del otro sin pedir permiso.** |
 
 ---
 
-## DEPENDENCIAS DE ARCHIVOS
+### Dependencias de archivos
 
 ```
-ERICK E1 (api.js) ← NECESITA backend corregido (Fase 1)
-ERICK E2 (AuthContext) ← NECESITA E1
-ERICK E3-E10 (componentes) ← NECESITA E2
-ERICK E11-E15 (páginas públicas) ← NECESITA E3-E10
+ALEJANDRO A0 (correcciones)       ← INDEPENDIENTE, empezar AHORA
+ALEJANDRO A1 (api.js)             ← INDEPENDIENTE (no necesita backend arreglado)
+ALEJANDRO A2 (AuthContext)        ← NECESITA A1
+ALEJANDRO A3-A10 (componentes)    ← NECESITA A2
+ALEJANDRO A11-A15 (públicas)      ← NECESITA A3-A10
+ALEJANDRO A16-A19 (cliente/emp)   ← NECESITA A3-A10, USA A1 (api.js)
 
-ALEJANDRO A0 (correcciones) ← INDEPENDIENTE
-ALEJANDRO A1-A11 (páginas) ← NECESITA E1+E2 (api.js + AuthContext)
-ALEJANDRO puede empezar con A0 inmediatamente
-ALEJANDRO puede usar MOCK DATA mientras Erick no haya pusheado E1+E2
-ALEJANDRO debe hacer git pull cuando Erick pushee E1+E2 y conectar con API real
+ERICK C1-C9 (backend fixes)       ← INDEPENDIENTE, empezar AHORA
+ERICK E1-E7 (admin pages)         ← NECESITA A1 + A2 (api.js + AuthContext) + backend arreglado
+```
+
+> **Importante:** Alejandro puede empezar TODO inmediatamente. Erick puede empezar los fixes de backend inmediatamente. Cuando Erick termine el backend y necesite hacer las páginas admin, Alejandro ya habrá pusheado api.js y AuthContext, así que Erick solo hace `git pull` y empieza.
+
+---
+
+<a id="-checklist-final"></a>
+## ✅ CHECKLIST FINAL
+
+Cuando ambos hayan terminado, juntos verificar:
+
+```bash
+# 1. Instalar todo
+npm run install-all
+
+# 2. Levantar servidor y cliente
+npm run dev
+# Debe mostrar: server en 5000, client en 5173
+
+# 3. Flujo completo cliente
+# - Registro → Login → Ver habitaciones → Filtrar → Ver detalle
+# - Seleccionar fechas → Elegir servicios → Elegir pago QR
+# - Confirmar reserva → Ver en "Mis Reservas" → Cancelar
+
+# 4. Flujo empleado
+# - Login empleado → Ver tareas → Iniciar limpieza → Completar
+
+# 5. Flujo admin
+# - Login admin → Dashboard (ver métricas y gráficos)
+# - CRUD habitaciones → CRUD usuarios → CRUD servicios
+# - Ver reservas → Cambiar estado → Asignar limpieza
+# - Verificar pagos (QR, Tigo Money, Transferencia, Efectivo)
+
+# 6. Verificar que gráficos cargan datos reales
+
+# 7. Verificar que no hay errores en consola del navegador
+
+# 8. Último commit y push
+git add .
+git commit -m "feat: entrega final - frontend completo"
+git push origin main
 ```
