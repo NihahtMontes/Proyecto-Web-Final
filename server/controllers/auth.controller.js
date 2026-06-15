@@ -1,11 +1,12 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// --- Generador de Token ---
 const generateToken = (user) => {
   return jwt.sign(
     {
       id: user._id,
-      role: user.role
+      role: user.role // <-- Volvemos a role
     },
     process.env.JWT_SECRET,
     {
@@ -19,28 +20,23 @@ const generateToken = (user) => {
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body; // <-- Volvemos a name y agregamos role
 
     if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Todos los campos son obligatorios'
-      });
+      return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios' });
     }
 
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return res.status(400).json({
-        success: false,
-        message: 'El correo ya está registrado'
-      });
+      return res.status(400).json({ success: false, message: 'El correo ya está registrado' });
     }
 
     const user = await User.create({
       name,
       email,
-      password
+      password,
+      role: role || 'cliente' // Si no envían rol, por defecto es cliente
     });
 
     const token = generateToken(user);
@@ -57,10 +53,7 @@ const register = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -72,71 +65,50 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Correo y contraseña son obligatorios'
-      });
+      return res.status(400).json({ success: false, message: 'Correo y contraseña son obligatorios' });
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Credenciales inválidas'
-      });
+      console.log(`❌ ALERTA: No se encontró ningún usuario con el correo: ${email}`);
+      return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
     }
 
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Credenciales inválidas'
-      });
+      console.log(`❌ ALERTA: La contraseña es incorrecta para el usuario: ${email}`);
+      return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
     }
 
     const token = generateToken(user);
+    
+    console.log(`✅ ÉXITO: Usuario ${email} logueado correctamente.`);
 
     res.status(200).json({
       success: true,
       token,
       user: {
         id: user._id,
-        name: user.name,
+        name: user.name, // <-- Volvemos a name
         email: user.email,
-        role: user.role
+        role: user.role  // <-- Volvemos a role
       }
     });
 
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    console.error("Error en el login:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Obtener usuario autenticado
-// @route   GET /api/auth/me
-// @access  Private
 const getMe = async (req, res) => {
   try {
-    res.status(200).json({
-      success: true,
-      user: req.user
-    });
-
+    res.status(200).json({ success: true, user: req.user });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-module.exports = {
-  register,
-  login,
-  getMe
-};
+module.exports = { register, login, getMe };

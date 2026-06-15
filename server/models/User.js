@@ -40,18 +40,16 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hashear contraseña antes de guardar
-userSchema.pre('save', async function (next) {
+// Hashear contraseña antes de guardar (Versión Moderna y limpia)
+userSchema.pre('save', async function () {
+  // Si la contraseña no fue modificada, simplemente retornamos para salir de la función
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  // Generamos el salt y hasheamos (sin next ni try/catch, Mongoose lo maneja)
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Comparar contraseña ingresada con la almacenada
