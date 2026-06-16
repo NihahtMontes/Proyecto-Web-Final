@@ -1,12 +1,51 @@
-import ProtectedRoute from "./components/ui/ProtectedRoute";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
+
+import Layout from "./components/layout/Layout";
+
+import HomePage from "./pages/public/HomePage";
+import RoomsPage from "./pages/public/RoomsPage";
+import RoomDetailPage from "./pages/public/RoomDetailPage";
+import LoginPage from "./pages/public/LoginPage";
+import RegisterPage from "./pages/public/RegisterPage";
 
 function App() {
   return (
-    <div className="p-10">
-      <h1 className="text-4xl font-bold text-blue-600">
-        ByteHotel funcionando correctamente
-      </h1>
-    </div>
+    <Routes>
+
+      <Route element={<Layout />}>
+
+        <Route
+          path="/"
+          element={<HomePage />}
+        />
+
+        <Route
+          path="/habitaciones"
+          element={<RoomsPage />}
+        />
+
+        <Route
+          path="/habitaciones/:id"
+          element={<RoomDetailPage />}
+        />
+
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
+
+        <Route
+          path="/register"
+          element={<RegisterPage />}
+        />
+
+      </Route>
+
+    </Routes>
   );
 }
 
