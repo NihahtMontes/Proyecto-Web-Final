@@ -1,5 +1,6 @@
 const CleaningTask = require('../models/CleaningTask');
 const Room = require('../models/Room');
+const User = require('../models/User'); // Importación necesaria para la validación C6
 
 const getMyTasks = async (req, res) => {
   try {
@@ -37,6 +38,12 @@ const assignTask = async (req, res) => {
       return res.status(400).json({ message: 'La habitación no existe o no requiere limpieza' });
     }
 
+    // VALIDACIÓN C6: Verificar que el usuario asignado sea realmente un empleado
+    const employee = await User.findById(employeeId);
+    if (!employee || employee.role !== 'empleado') {
+        return res.status(400).json({ message: 'El usuario asignado no es un empleado válido' });
+    }
+
     const task = await CleaningTask.create({
       room: roomId,
       employee: employeeId,
@@ -60,6 +67,11 @@ const startTask = async (req, res) => {
       return res.status(403).json({ message: 'No autorizado o tarea no encontrada' });
     }
 
+    // VALIDACIÓN C7: Verificar que la tarea esté pendiente
+    if (task.status !== 'pendiente') {
+        return res.status(400).json({ message: 'La tarea debe estar en estado pendiente para iniciarla' });
+    }
+
     task.status = 'en_progreso';
     task.startedAt = Date.now();
     await task.save();
@@ -75,6 +87,11 @@ const completeTask = async (req, res) => {
     const task = await CleaningTask.findById(req.params.id);
     if (!task || task.employee.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'No autorizado o tarea no encontrada' });
+    }
+
+    // VALIDACIÓN C8: Verificar que la tarea esté en progreso
+    if (task.status !== 'en_progreso') {
+        return res.status(400).json({ message: 'La tarea debe estar en progreso para completarla' });
     }
 
     task.status = 'completada';
