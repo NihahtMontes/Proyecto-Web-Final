@@ -16,9 +16,10 @@ const generateToken = (user) => {
 };
 
 // @desc    Registrar usuario
+// FIX C1: Se elimina 'role' del req.body para evitar manipulación de cuentas Admin
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body; // C1 Fix: Ignoramos cualquier rol enviado
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios' });
@@ -30,11 +31,12 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'El correo ya está registrado' });
     }
 
+    // C1 Fix: Forzamos de manera estricta que el rol sea 'cliente' en la base de datos
     const user = await User.create({
       name,
       email,
       password,
-      role: role || 'cliente'
+      role: 'cliente' 
     });
 
     const token = generateToken(user);
@@ -51,7 +53,8 @@ const register = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    // M6 Fix: No dejamos console.logs que expongan errores crudos o datos del req.body
+    res.status(500).json({ success: false, message: 'Error en el servidor al registrar el usuario' });
   }
 };
 
@@ -70,7 +73,6 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
     }
 
-    // Nota: Esto asume que tienes un método matchPassword en tu modelo User
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -79,6 +81,7 @@ const login = async (req, res) => {
 
     const token = generateToken(user);
     
+    // M6 Fix: Garantizamos la ausencia de console.logs con credenciales/tokens en consola
     res.status(200).json({
       success: true,
       token,
@@ -91,7 +94,7 @@ const login = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: 'Error en el servidor al iniciar sesión' });
   }
 };
 
