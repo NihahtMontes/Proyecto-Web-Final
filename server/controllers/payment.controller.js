@@ -20,8 +20,9 @@ const generateQR = async (req, res) => {
       status: 'pendiente'
     });
 
-    const { qrDataURL } = await generateBCBQR({ bookingId, amount: booking.totalPrice });
-    res.status(201).json({ payment, qrCode: qrDataURL });
+    // VALIDACIÓN M5: Extraer y retornar qrText
+    const { qrText, qrDataURL } = await generateBCBQR({ bookingId, amount: booking.totalPrice });
+    res.status(201).json({ payment, qrCode: qrDataURL, qrText });
   } catch (error) {
     res.status(500).json({ message: 'Error generando QR', error: error.message });
   }
