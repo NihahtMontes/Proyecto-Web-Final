@@ -1,7 +1,4 @@
-import {
-  Routes,
-  Route,
-} from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import Layout from "./components/layout/Layout";
 
@@ -18,56 +15,58 @@ import ProfilePage from "./pages/cliente/ProfilePage";
 import CleaningPanelPage from "./pages/empleado/CleaningPanelPage";
 
 function App() {
-  return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route
-          path="/"
-          element={<HomePage />}
-        />
+return ( <Routes>
+<Route element={<Layout />}>
+<Route
+path="/"
+element={<HomePage />}
+/>
 
-        <Route
-          path="/habitaciones"
-          element={<RoomsPage />}
-        />
+```
+    <Route
+      path="/habitaciones"
+      element={<RoomsPage />}
+    />
 
-        <Route
-          path="/habitaciones/:id"
-          element={<RoomDetailPage />}
-        />
+    <Route
+      path="/habitaciones/:id"
+      element={<RoomDetailPage />}
+    />
 
-        <Route
-          path="/login"
-          element={<LoginPage />}
-        />
+    <Route
+      path="/login"
+      element={<LoginPage />}
+    />
 
-        <Route
-          path="/register"
-          element={<RegisterPage />}
-        />
+    <Route
+      path="/register"
+      element={<RegisterPage />}
+    />
 
-        <Route
-          path="/reservar"
-          element={<BookingConfirmPage />}
-        />
+    <Route
+      path="/reservar"
+      element={<BookingConfirmPage />}
+    />
 
-        <Route
-          path="/mis-reservas"
-          element={<MyBookingsPage />}
-        />
+    <Route
+      path="/mis-reservas"
+      element={<MyBookingsPage />}
+    />
 
-        <Route
-          path="/perfil"
-          element={<ProfilePage />}
-        />
+    <Route
+      path="/perfil"
+      element={<ProfilePage />}
+    />
 
-        <Route
-          path="/limpieza"
-          element={<CleaningPanelPage />}
-        />
-      </Route>
-    </Routes>
-  );
+    <Route
+      path="/limpieza"
+      element={<CleaningPanelPage />}
+    />
+  </Route>
+</Routes>
+
+
+);
 }
 
 export default App;
