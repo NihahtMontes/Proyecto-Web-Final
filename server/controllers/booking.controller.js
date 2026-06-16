@@ -19,6 +19,18 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: 'La habitación no está disponible' });
     }
 
+    // VALIDACIÓN C2: Evitar solapamiento de fechas
+    const overlappingBooking = await Booking.findOne({
+        room: roomId,
+        status: { $in: ['confirmada', 'en_curso'] },
+        checkIn: { $lt: outDate },
+        checkOut: { $gt: inDate }
+    });
+
+    if (overlappingBooking) {
+        return res.status(400).json({ message: 'La habitación ya tiene una reserva que se solapa con las fechas seleccionadas' });
+    }
+
     // Calcular noches
     const diffTime = Math.abs(outDate - inDate);
     const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
