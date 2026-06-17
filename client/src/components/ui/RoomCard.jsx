@@ -1,60 +1,33 @@
-export default function RoomCard({
-  room,
-  onClick,
-}) {
+export default function RoomCard({ room, onClick }) {
+  const image = room?.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945";
+
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
+      <img src={image} alt={`Habitación ${room?.number}`} className="h-48 w-full object-cover" />
 
-      <img
-        src={
-          room.image ||
-          "https://placehold.co/600x400"
-        }
-        alt={room.number}
-        className="w-full h-48 object-cover"
-      />
+      <div className="p-5">
+        <h3 className="text-xl font-bold text-gray-800">
+          Habitación {room?.number || "S/N"}
+        </h3>
 
-      <div className="p-4">
+        <p className="text-sm text-gray-500 mt-1">{room?.type || "Estándar"}</p>
 
-        <div className="flex justify-between items-center mb-2">
-
-          <h3 className="font-bold text-lg">
-            Habitación {room.number}
-          </h3>
-
-          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm">
-            {room.type}
-          </span>
-
+        <div className="mt-3 text-gray-700 space-y-1">
+          <p>Capacidad: {room?.capacity || 1} personas</p>
+          <p className="font-bold text-blue-600">
+            Bs. {room?.pricePerNight || 0}/noche
+          </p>
+          <p>Estado: {room?.status || "disponible"}</p>
         </div>
 
-        <p className="text-gray-600 mb-2">
-          Capacidad: {room.capacity} personas
-        </p>
-
-        <p className="text-xl font-bold text-green-600 mb-3">
-          Bs. {room.pricePerNight}/noche
-        </p>
-
-        <span
-          className={`inline-block px-2 py-1 rounded text-sm mb-3 ${
-            room.status === "available"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {room.status}
-        </span>
-
         <button
-          onClick={() => onClick(room)}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          type="button"
+          onClick={() => onClick?.(room)}
+          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Ver detalle
         </button>
-
       </div>
-
     </div>
   );
 }
