@@ -3,6 +3,7 @@ const Room = require('../models/Room');
 const Service = require('../models/Service');
 const { sendBookingConfirmation } = require('../utils/email');
 
+// @desc    Crear nueva reserva
 const createBooking = async (req, res) => {
   try {
     const { roomId, checkIn, checkOut, services, paymentMethod } = req.body;
@@ -14,12 +15,18 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: 'La fecha de salida debe ser mayor a la de entrada' });
     }
 
+    // Buscamos que la habitación exista
     const room = await Room.findById(roomId);
-    if (!room || room.status !== 'disponible') {
-      return res.status(400).json({ message: 'La habitación no está disponible' });
+    if (!room) {
+      return res.status(404).json({ message: 'La habitación no existe' });
+    }
+    
+    // Si la habitación está en mantenimiento
+    if (room.status === 'mantenimiento') {
+      return res.status(400).json({ message: 'La habitación está en mantenimiento y no se puede reservar' });
     }
 
-    // VALIDACIÓN C2: Evitar solapamiento de fechas
+    // ✅ VALIDACIÓN C2: Evitar solapamiento de fechas exactas
     const overlappingBooking = await Booking.findOne({
         room: roomId,
         status: { $in: ['confirmada', 'en_curso'] },
@@ -68,11 +75,7 @@ const createBooking = async (req, res) => {
       status: 'pendiente'
     });
 
-    // Cambiar el estado de la habitación a ocupado
-    room.status = 'ocupado';
-    await room.save();
-
-    // Enviar correo (no detenemos la ejecución si falla el correo)
+    // Enviar correo (asíncrono)
     sendBookingConfirmation(req.user.email, booking).catch(console.error);
 
     const populatedBooking = await Booking.findById(booking._id)
@@ -85,6 +88,7 @@ const createBooking = async (req, res) => {
   }
 };
 
+// @desc    Obtener reservas del usuario autenticado
 const getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id })
@@ -97,6 +101,7 @@ const getMyBookings = async (req, res) => {
   }
 };
 
+// @desc    Cancelar una reserva pendiente
 const cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
@@ -112,7 +117,6 @@ const cancelBooking = async (req, res) => {
     booking.status = 'cancelada';
     await booking.save();
 
-    // Liberar la habitación
     await Room.findByIdAndUpdate(booking.room, { status: 'disponible' });
 
     res.json(booking);
@@ -121,6 +125,7 @@ const cancelBooking = async (req, res) => {
   }
 };
 
+// @desc    Obtener todas las reservas (Admin)
 const getAllBookings = async (req, res) => {
   try {
     const { status, room, user } = req.query;
@@ -139,6 +144,7 @@ const getAllBookings = async (req, res) => {
   }
 };
 
+// @desc    Actualizar estado de la reserva (Admin/Empleado)
 const updateBookingStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -146,9 +152,13 @@ const updateBookingStatus = async (req, res) => {
     
     if (!booking) return res.status(404).json({ message: 'Reserva no encontrada' });
 
-    // Si la reserva se marca como completada, ensuciamos el cuarto para el empleado
-    if (status === 'completada') {
+    // Cambiar estado físico de la habitación según el flujo real del hotel
+    if (status === 'en_curso') {
+      await Room.findByIdAndUpdate(booking.room, { status: 'ocupado' });
+    } else if (status === 'completada') {
       await Room.findByIdAndUpdate(booking.room, { status: 'sucio' });
+    } else if (status === 'cancelada') {
+      await Room.findByIdAndUpdate(booking.room, { status: 'disponible' });
     }
 
     res.json(booking);
@@ -157,7 +167,7 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
-// Implementación simple de reseñas ligada a la reserva
+// @desc    Crear una reseña de una estadía completada
 const createReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
