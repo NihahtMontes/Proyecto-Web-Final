@@ -1,0 +1,32 @@
+import { Link } from "react-router-dom";
+
+export default function AdminDashboardPage() {
+  const cards = [
+    { title: "Habitaciones", path: "/admin/rooms" },
+    { title: "Reservas", path: "/admin/bookings" },
+    { title: "Usuarios", path: "/admin/users" },
+    { title: "Servicios", path: "/admin/services" },
+    { title: "Limpieza", path: "/admin/cleaning" },
+    { title: "Pagos", path: "/admin/payments" },
+  ];
+
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-6">Panel Administrador</h1>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        {cards.map((card) => (
+          <Link
+            key={card.path}
+            to={card.path}
+            className="bg-white p-6 rounded-xl shadow hover:shadow-lg border"
+          >
+            <h2 className="text-xl font-bold text-blue-600">
+              {card.title}
+            </h2>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
