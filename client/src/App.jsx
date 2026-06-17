@@ -2,12 +2,15 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/ui/ProtectedRoute";
+
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import HomePage from "./pages/public/HomePage";
 import RoomsPage from "./pages/public/RoomsPage";
 import RoomDetailPage from "./pages/public/RoomDetailPage";
 import LoginPage from "./pages/public/LoginPage";
 import RegisterPage from "./pages/public/RegisterPage";
+import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
+import AdminCleaningPage from "./pages/admin/AdminCleaningPage";
 
 import BookingConfirmPage from "./pages/cliente/BookingConfirmPage";
 import MyBookingsPage from "./pages/cliente/MyBookingsPage";
@@ -54,10 +57,26 @@ function App() {
         <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/rooms" element={<ProtectedRoute allowedRoles={["admin"]}><RoomsPage /></ProtectedRoute>} />
-        <Route path="/admin/bookings" element={<ProtectedRoute allowedRoles={["admin"]}><MyBookingsPage /></ProtectedRoute>} />
+        
         <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPlaceholder title="Usuarios" /></ProtectedRoute>} />
         <Route path="/admin/services" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPlaceholder title="Servicios" /></ProtectedRoute>} />
-        <Route path="/admin/cleaning" element={<ProtectedRoute allowedRoles={["admin"]}><CleaningPanelPage /></ProtectedRoute>} />
+        <Route
+  path="/admin/bookings"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminBookingsPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/cleaning"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminCleaningPage />
+    </ProtectedRoute>
+  }
+/>
         <Route path="/admin/payments" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPlaceholder title="Pagos" /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/admin" replace />} />
