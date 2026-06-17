@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/ui/ProtectedRoute";
-
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import HomePage from "./pages/public/HomePage";
 import RoomsPage from "./pages/public/RoomsPage";
 import RoomDetailPage from "./pages/public/RoomDetailPage";
