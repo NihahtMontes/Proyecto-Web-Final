@@ -1,439 +1,260 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { bookingAPI, paymentAPI } from "../../services/api";
 
-import {
-  bookingAPI,
-  paymentAPI,
-} from "../../services/api";
+const formatDate = (date) => {
+  if (!date) return "Sin fecha";
+  return new Date(date).toLocaleDateString("es-ES");
+};
 
 export default function BookingConfirmPage() {
-  const location = useLocation();
+  const { state } = useLocation();
   const navigate = useNavigate();
 
-  const {
-    room,
-    checkIn,
-    checkOut,
-    nights,
-  } = location.state || {};
+  const room = state?.room || null;
+  const checkIn = state?.checkIn || null;
+  const checkOut = state?.checkOut || null;
 
-  const [paymentMethod, setPaymentMethod] =
-    useState("efectivo");
+  const calculatedNights = useMemo(() => {
+    if (!checkIn || !checkOut) return 1;
+    const diff = new Date(checkOut) - new Date(checkIn);
+    return Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }, [checkIn, checkOut]);
 
-  const [loading, setLoading] =
-    useState(false);
+  const nights = state?.nights || calculatedNights;
 
-  const [qrData, setQrData] =
-    useState(null);
-
-  const [tigoData, setTigoData] =
-    useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("efectivo");
+  const [loading, setLoading] = useState(false);
+  const [qrData, setQrData] = useState(null);
+  const [tigoData, setTigoData] = useState(null);
+  const [selectedServices, setSelectedServices] = useState([]);
 
   const services = [
-    {
-      id: 1,
-      name: "Desayuno Buffet",
-      price: 50,
-    },
-    {
-      id: 2,
-      name: "Transporte",
-      price: 80,
-    },
-    {
-      id: 3,
-      name: "Lavandería",
-      price: 30,
-    },
+    { id: 1, name: "Desayuno Buffet", price: 50 },
+    { id: 2, name: "Transporte", price: 80 },
+    { id: 3, name: "Lavandería", price: 30 },
   ];
 
-  const [selectedServices, setSelectedServices] =
-    useState([]);
-
   const toggleService = (service) => {
-    const exists =
-      selectedServices.find(
-        (s) => s.id === service.id
-      );
+    setSelectedServices((prev) =>
+      prev.some((s) => s.id === service.id)
+        ? prev.filter((s) => s.id !== service.id)
+        : [...prev, service]
+    );
+  };
 
-    if (exists) {
-      setSelectedServices(
-        selectedServices.filter(
-          (s) => s.id !== service.id
-        )
-      );
-    } else {
-      setSelectedServices([
-        ...selectedServices,
-        service,
-      ]);
+  const basePrice = (room?.pricePerNight || 0) * nights;
+  const servicesPrice = selectedServices.reduce((acc, item) => acc + item.price, 0);
+  const total = basePrice + servicesPrice;
+
+  const handlePaymentChange = async (method) => {
+    setPaymentMethod(method);
+
+    try {
+      if (method === "qr") {
+        const response = await paymentAPI.generateQR({ amount: total });
+        setQrData(response.data);
+      }
+
+      if (method === "tigo") {
+        const response = await paymentAPI.registerTigoMoney({ amount: total });
+        setTigoData(response.data);
+      }
+    } catch {
+      toast.error("No se pudo preparar el método de pago");
     }
   };
 
-  const basePrice =
-    (room?.pricePerNight || 0) *
-    (nights || 1);
+  const handleConfirm = async () => {
+    try {
+      setLoading(true);
 
-  const servicesPrice =
-    selectedServices.reduce(
-      (acc, item) =>
-        acc + item.price,
-      0
-    );
+      await bookingAPI.create({
+        room: room?._id,
+        roomId: room?._id,
+        checkIn,
+        checkOut,
+        services: selectedServices,
+        paymentMethod,
+        totalPrice: total,
+        total,
+      });
 
-  const total =
-    basePrice + servicesPrice;
-
-  const generateQR =
-    async () => {
-      try {
-        const response =
-          await paymentAPI.generateQR({
-            amount: total,
-          });
-
-        setQrData(
-          response.data
-        );
-      } catch {
-        toast.error(
-          "No se pudo generar QR"
-        );
-      }
-    };
-
-  const generateTigo =
-    async () => {
-      try {
-        const response =
-          await paymentAPI.registerTigoMoney(
-            {
-              amount: total,
-            }
-          );
-
-        setTigoData(
-          response.data
-        );
-      } catch {
-        toast.error(
-          "No se pudo registrar Tigo Money"
-        );
-      }
-    };
-
-  const handleConfirm =
-    async () => {
-      try {
-        setLoading(true);
-
-        await bookingAPI.create({
-          roomId: room?._id,
-          checkIn,
-          checkOut,
-          services:
-            selectedServices,
-          paymentMethod,
-          total,
-        });
-
-        toast.success(
-          "Reserva creada"
-        );
-
-        navigate(
-          "/mis-reservas"
-        );
-      } catch (error) {
-        toast.error(
-          "Error al reservar"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      toast.success("Reserva creada correctamente");
+      navigate("/mis-reservas");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Error al reservar");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!room) {
     return (
-      <div className="p-10 text-center">
-        No hay datos de reserva.
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <div className="bg-white shadow rounded-xl p-8 text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            No hay datos de reserva
+          </h1>
+          <p className="text-gray-500 mb-5">
+            Selecciona una habitación antes de confirmar.
+          </p>
+          <button
+            onClick={() => navigate("/habitaciones")}
+            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Ver habitaciones
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-
-      <h1 className="text-3xl font-bold mb-6">
+    <div className="max-w-6xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">
         Confirmar Reserva
       </h1>
 
       <div className="grid md:grid-cols-2 gap-8">
-
-        <div>
-
+        <div className="bg-white shadow rounded-xl overflow-hidden">
           <img
-            src={room.image}
-            alt={room.number}
-            className="w-full h-64 object-cover rounded-lg"
+            src={room?.image || room?.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945"}
+            alt={`Habitación ${room?.number || ""}`}
+            className="w-full h-72 object-cover"
           />
 
-          <h2 className="text-xl font-bold mt-4">
-            Habitación {room.number}
-          </h2>
+          <div className="p-6 space-y-3">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Habitación {room?.number || "S/N"}
+            </h2>
 
-          <p>{room.type}</p>
+            <p className="text-gray-600">
+              Tipo: <span className="font-medium">{room?.type || "Estándar"}</span>
+            </p>
 
-          <p>
-            Check-In:
-            {" "}
-            {checkIn}
-          </p>
+            <p className="text-gray-600">
+              Check-In: <span className="font-medium">{formatDate(checkIn)}</span>
+            </p>
 
-          <p>
-            Check-Out:
-            {" "}
-            {checkOut}
-          </p>
+            <p className="text-gray-600">
+              Check-Out: <span className="font-medium">{formatDate(checkOut)}</span>
+            </p>
 
-          <p>
-            Noches:
-            {" "}
-            {nights}
-          </p>
+            <p className="text-gray-600">
+              Noches: <span className="font-medium">{nights}</span>
+            </p>
 
+            <p className="text-blue-600 text-xl font-bold">
+              Bs. {room?.pricePerNight || 0} / noche
+            </p>
+          </div>
         </div>
 
         <div>
+          <div className="bg-white shadow rounded-xl p-6">
+            <h3 className="font-bold text-lg mb-4">Servicios adicionales</h3>
 
-          <div className="bg-white shadow rounded-lg p-5">
-
-            <h3 className="font-bold text-lg mb-3">
-              Servicios adicionales
-            </h3>
-
-            {services.map(
-              (service) => (
+            <div className="space-y-3">
+              {services.map((service) => (
                 <label
                   key={service.id}
-                  className="flex justify-between mb-2"
+                  className="flex justify-between items-center border rounded-lg p-3 cursor-pointer hover:bg-gray-50"
                 >
                   <span>
                     <input
                       type="checkbox"
                       className="mr-2"
-                      onChange={() =>
-                        toggleService(
-                          service
-                        )
-                      }
+                      checked={selectedServices.some((s) => s.id === service.id)}
+                      onChange={() => toggleService(service)}
                     />
-
                     {service.name}
                   </span>
 
-                  <span>
-                    Bs. {service.price}
-                  </span>
+                  <span className="font-semibold">Bs. {service.price}</span>
                 </label>
-              )
-            )}
-
-            <hr className="my-4" />
-
-            <p>
-              Base:
-              {" "}
-              Bs. {basePrice}
-            </p>
-
-            <p>
-              Servicios:
-              {" "}
-              Bs. {servicesPrice}
-            </p>
-
-            <p className="text-2xl font-bold mt-3">
-              Total:
-              {" "}
-              Bs. {total}
-            </p>
-
-          </div>
-
-          <div className="bg-white shadow rounded-lg p-5 mt-5">
-
-            <h3 className="font-bold text-lg mb-3">
-              Método de Pago
-            </h3>
-
-            <div className="space-y-2">
-
-              <label className="block">
-                <input
-                  type="radio"
-                  value="qr"
-                  checked={
-                    paymentMethod ===
-                    "qr"
-                  }
-                  onChange={() => {
-                    setPaymentMethod(
-                      "qr"
-                    );
-                    generateQR();
-                  }}
-                />
-                {" "}
-                QR Bancario
-              </label>
-
-              <label className="block">
-                <input
-                  type="radio"
-                  value="tigo"
-                  checked={
-                    paymentMethod ===
-                    "tigo"
-                  }
-                  onChange={() => {
-                    setPaymentMethod(
-                      "tigo"
-                    );
-                    generateTigo();
-                  }}
-                />
-                {" "}
-                Tigo Money
-              </label>
-
-              <label className="block">
-                <input
-                  type="radio"
-                  value="transferencia"
-                  checked={
-                    paymentMethod ===
-                    "transferencia"
-                  }
-                  onChange={() =>
-                    setPaymentMethod(
-                      "transferencia"
-                    )
-                  }
-                />
-                {" "}
-                Transferencia
-              </label>
-
-              <label className="block">
-                <input
-                  type="radio"
-                  value="efectivo"
-                  checked={
-                    paymentMethod ===
-                    "efectivo"
-                  }
-                  onChange={() =>
-                    setPaymentMethod(
-                      "efectivo"
-                    )
-                  }
-                />
-                {" "}
-                Efectivo
-              </label>
-
+              ))}
             </div>
 
-            {paymentMethod ===
-              "qr" &&
-              qrData && (
-                <div className="mt-4">
-                  <p>
-                    Escanee el QR
-                    desde su banco.
-                  </p>
+            <hr className="my-5" />
 
-                  <img
-                    src={
-                      qrData.qrImage
-                    }
-                    alt="QR"
-                    className="w-56"
-                  />
-                </div>
-              )}
+            <div className="space-y-2 text-gray-700">
+              <p>Base: Bs. {basePrice}</p>
+              <p>Servicios: Bs. {servicesPrice}</p>
+              <p className="text-2xl font-bold text-blue-600">
+                Total: Bs. {total}
+              </p>
+            </div>
+          </div>
 
-            {paymentMethod ===
-              "tigo" &&
-              tigoData && (
-                <div className="mt-4">
-                  <p>
-                    Número:
-                    {" "}
-                    {
-                      tigoData.number
-                    }
-                  </p>
+          <div className="bg-white shadow rounded-xl p-6 mt-5">
+            <h3 className="font-bold text-lg mb-4">Método de Pago</h3>
 
-                  <p>
-                    Monto:
-                    {" "}
-                    Bs.
-                    {
-                      tigoData.amount
-                    }
-                  </p>
-                </div>
-              )}
-
-            {paymentMethod ===
-              "transferencia" && (
-                <div className="mt-4">
-                  <p>
-                    Banco Unión
-                  </p>
-
-                  <p>
-                    Cuenta:
-                    123456789
-                  </p>
-
+            <div className="space-y-3">
+              {[
+                ["qr", "QR Bancario"],
+                ["tigo", "Tigo Money"],
+                ["transferencia", "Transferencia"],
+                ["efectivo", "Efectivo"],
+              ].map(([value, label]) => (
+                <label key={value} className="block">
                   <input
-                    type="file"
-                    className="mt-3"
+                    type="radio"
+                    value={value}
+                    checked={paymentMethod === value}
+                    onChange={() => handlePaymentChange(value)}
+                    className="mr-2"
                   />
-                </div>
-              )}
+                  {label}
+                </label>
+              ))}
+            </div>
 
-            {paymentMethod ===
-              "efectivo" && (
-                <div className="mt-4">
-                  Puede pagar
-                  directamente en
-                  recepción.
-                </div>
-              )}
+            {paymentMethod === "qr" && (
+              <div className="mt-4 bg-blue-50 p-4 rounded-lg">
+                <p className="mb-3">Escanee este QR con la app de su banco.</p>
+                {qrData?.qrImage ? (
+                  <img src={qrData.qrImage} alt="QR" className="w-56" />
+                ) : (
+                  <p className="text-sm text-gray-500">Generando QR...</p>
+                )}
+              </div>
+            )}
 
+            {paymentMethod === "tigo" && (
+              <div className="mt-4 bg-purple-50 p-4 rounded-lg">
+                <p>Transfiera Bs. {total} por Tigo Money.</p>
+                <p>Número: {tigoData?.number || "70000000"}</p>
+                <p>Monto: Bs. {tigoData?.amount || total}</p>
+              </div>
+            )}
+
+            {paymentMethod === "transferencia" && (
+              <div className="mt-4 bg-green-50 p-4 rounded-lg">
+                <p className="font-semibold">Banco Unión</p>
+                <p>Cuenta: 123456789</p>
+                <p>Titular: ByteHotel</p>
+                <input type="file" className="mt-3" />
+              </div>
+            )}
+
+            {paymentMethod === "efectivo" && (
+              <div className="mt-4 bg-yellow-50 p-4 rounded-lg">
+                Puede pagar directamente en recepción del hotel.
+              </div>
+            )}
           </div>
 
           <button
-            onClick={
-              handleConfirm
-            }
+            onClick={handleConfirm}
             disabled={loading}
-            className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg"
+            className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-60"
           >
-            {loading
-              ? "Procesando..."
-              : "Confirmar Reserva"}
+            {loading ? "Procesando..." : "Confirmar Reserva"}
           </button>
-
         </div>
-
       </div>
-
     </div>
   );
 }
