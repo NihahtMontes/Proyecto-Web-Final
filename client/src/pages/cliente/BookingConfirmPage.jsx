@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { bookingAPI, paymentAPI } from "../../services/api";
+import { bookingAPI } from "../../services/api";
 
 const formatDate = (date) => {
   if (!date) return "Sin fecha";
@@ -15,6 +15,7 @@ export default function BookingConfirmPage() {
   const room = state?.room || null;
   const checkIn = state?.checkIn || null;
   const checkOut = state?.checkOut || null;
+  const roomId = room?._id || room?.id;
 
   const calculatedNights = useMemo(() => {
     if (!checkIn || !checkOut) return 1;
@@ -48,31 +49,36 @@ export default function BookingConfirmPage() {
   const servicesPrice = selectedServices.reduce((acc, item) => acc + item.price, 0);
   const total = basePrice + servicesPrice;
 
-  const handlePaymentChange = async (method) => {
+  const handlePaymentChange = (method) => {
     setPaymentMethod(method);
 
-    try {
-      if (method === "qr") {
-        const response = await paymentAPI.generateQR({ amount: total });
-        setQrData(response.data);
-      }
+    if (method === "qr") {
+      setQrData({
+        qrImage: null,
+        message: "QR disponible después de crear la reserva",
+      });
+    }
 
-      if (method === "tigo") {
-        const response = await paymentAPI.registerTigoMoney({ amount: total });
-        setTigoData(response.data);
-      }
-    } catch {
-      toast.error("No se pudo preparar el método de pago");
+    if (method === "tigo") {
+      setTigoData({
+        number: "70000000",
+        amount: total,
+      });
     }
   };
 
   const handleConfirm = async () => {
     try {
+      if (!roomId) {
+        toast.error("La habitación no tiene ID válido");
+        return;
+      }
+
       setLoading(true);
 
       await bookingAPI.create({
-        room: room?._id,
-        roomId: room?._id,
+        room: roomId,
+        roomId,
         checkIn,
         checkOut,
         services: selectedServices,
@@ -84,6 +90,7 @@ export default function BookingConfirmPage() {
       toast.success("Reserva creada correctamente");
       navigate("/mis-reservas");
     } catch (error) {
+      console.error(error);
       toast.error(error?.response?.data?.message || "Error al reservar");
     } finally {
       setLoading(false);
@@ -120,7 +127,11 @@ export default function BookingConfirmPage() {
       <div className="grid md:grid-cols-2 gap-8">
         <div className="bg-white shadow rounded-xl overflow-hidden">
           <img
-            src={room?.image || room?.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945"}
+            src={
+              room?.image ||
+              room?.images?.[0] ||
+              "https://images.unsplash.com/photo-1566073771259-6a8506099945"
+            }
             alt={`Habitación ${room?.number || ""}`}
             className="w-full h-72 object-cover"
           />
@@ -214,11 +225,9 @@ export default function BookingConfirmPage() {
             {paymentMethod === "qr" && (
               <div className="mt-4 bg-blue-50 p-4 rounded-lg">
                 <p className="mb-3">Escanee este QR con la app de su banco.</p>
-                {qrData?.qrImage ? (
-                  <img src={qrData.qrImage} alt="QR" className="w-56" />
-                ) : (
-                  <p className="text-sm text-gray-500">Generando QR...</p>
-                )}
+                <p className="text-sm text-gray-500">
+                  {qrData?.message || "QR disponible después de confirmar la reserva"}
+                </p>
               </div>
             )}
 
