@@ -9,6 +9,9 @@ const connectDB = require('./config/db');
 const Booking = require('./models/Booking');
 const Room = require('./models/Room');
 
+// ✅ M1/M2: Importar la función de utilidad de correos para las reseñas automáticas
+const { sendReviewInvitation } = require('./utils/email');
+
 // =========================
 // Importación de Rutas
 // =========================
@@ -79,16 +82,31 @@ cron.schedule('2 0 * * *', async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const checkouts = await Booking.find({ status: 'en_curso', checkOut: { $lte: today } });
+    // 💡 CORRECCIÓN: Agregamos populate para traer de forma segura los datos de envío del correo
+    const checkouts = await Booking.find({ 
+      status: 'en_curso', 
+      checkOut: { $lte: today } 
+    }).populate('user', 'email').populate('room', 'number');
     
     for (const booking of checkouts) {
       booking.status = 'completada';
       await booking.save();
       
       // La habitación pasa a estado sucio para que el empleado la vea en su panel
-      await Room.findByIdAndUpdate(booking.room, { status: 'sucio' });
+      // Usamos booking.room._id debido a que ahora está poblada como objeto
+      const roomId = booking.room?._id || booking.room;
+      await Room.findByIdAndUpdate(roomId, { status: 'sucio' });
+
+      // 📬 TAREA M2: Enviar correo de invitación a dejar una reseña de forma asíncrona
+      if (booking.user?.email) {
+        sendReviewInvitation(booking.user.email, {
+          roomNumber: booking.room?.number || 'N/A',
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut
+        }).catch(err => console.error('Error enviando email de review automática:', err));
+      }
     }
-    console.log(`Cron: Check-out automático ejecutado. Habitaciones liberadas: ${checkouts.length}`);
+    console.log(`Cron: Check-out automático ejecutado. Habitaciones liberadas e invitaciones de reseña enviadas: ${checkouts.length}`);
   } catch (error) {
     console.error('Error en Cron Check-out:', error);
   }
