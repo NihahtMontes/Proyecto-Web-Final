@@ -1,38 +1,39 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
+
+import {
+  bookingAPI,
+  paymentAPI,
+} from "../../services/api";
 
 export default function BookingConfirmPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const bookingData =
-    location.state || {};
+  const {
+    room,
+    checkIn,
+    checkOut,
+    nights,
+  } = location.state || {};
 
-  const room =
-    bookingData.room || {
-      number: "101",
-      type: "Suite",
-      pricePerNight: 350,
-      image:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-    };
+  const [paymentMethod, setPaymentMethod] =
+    useState("efectivo");
 
-  const nights =
-    bookingData.nights || 1;
+  const [loading, setLoading] =
+    useState(false);
 
-  const [paymentMethod,
-    setPaymentMethod] =
-    useState("qr");
+  const [qrData, setQrData] =
+    useState(null);
 
-  const [services,
-    setServices] =
-    useState([]);
+  const [tigoData, setTigoData] =
+    useState(null);
 
-  const availableServices = [
+  const services = [
     {
       id: 1,
-      name: "Desayuno",
+      name: "Desayuno Buffet",
       price: 50,
     },
     {
@@ -47,50 +48,98 @@ export default function BookingConfirmPage() {
     },
   ];
 
-  const toggleService = (
-    service
-  ) => {
+  const [selectedServices, setSelectedServices] =
+    useState([]);
+
+  const toggleService = (service) => {
     const exists =
-      services.find(
-        (s) =>
-          s.id === service.id
+      selectedServices.find(
+        (s) => s.id === service.id
       );
 
     if (exists) {
-      setServices(
-        services.filter(
-          (s) =>
-            s.id !== service.id
+      setSelectedServices(
+        selectedServices.filter(
+          (s) => s.id !== service.id
         )
       );
     } else {
-      setServices([
-        ...services,
+      setSelectedServices([
+        ...selectedServices,
         service,
       ]);
     }
   };
 
-  const servicesTotal =
-    services.reduce(
+  const basePrice =
+    (room?.pricePerNight || 0) *
+    (nights || 1);
+
+  const servicesPrice =
+    selectedServices.reduce(
       (acc, item) =>
         acc + item.price,
       0
     );
 
-  const roomTotal =
-    room.pricePerNight *
-    nights;
-
   const total =
-    roomTotal +
-    servicesTotal;
+    basePrice + servicesPrice;
 
-  const confirmBooking =
+  const generateQR =
     async () => {
       try {
+        const response =
+          await paymentAPI.generateQR({
+            amount: total,
+          });
+
+        setQrData(
+          response.data
+        );
+      } catch {
+        toast.error(
+          "No se pudo generar QR"
+        );
+      }
+    };
+
+  const generateTigo =
+    async () => {
+      try {
+        const response =
+          await paymentAPI.registerTigoMoney(
+            {
+              amount: total,
+            }
+          );
+
+        setTigoData(
+          response.data
+        );
+      } catch {
+        toast.error(
+          "No se pudo registrar Tigo Money"
+        );
+      }
+    };
+
+  const handleConfirm =
+    async () => {
+      try {
+        setLoading(true);
+
+        await bookingAPI.create({
+          roomId: room?._id,
+          checkIn,
+          checkOut,
+          services:
+            selectedServices,
+          paymentMethod,
+          total,
+        });
+
         toast.success(
-          "Reserva creada correctamente"
+          "Reserva creada"
         );
 
         navigate(
@@ -98,10 +147,20 @@ export default function BookingConfirmPage() {
         );
       } catch (error) {
         toast.error(
-          "Error al crear reserva"
+          "Error al reservar"
         );
+      } finally {
+        setLoading(false);
       }
     };
+
+  if (!room) {
+    return (
+      <div className="p-10 text-center">
+        No hay datos de reserva.
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -110,36 +169,32 @@ export default function BookingConfirmPage() {
         Confirmar Reserva
       </h1>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-8">
 
-        <div className="bg-white shadow rounded-lg p-5">
+        <div>
 
           <img
             src={room.image}
-            alt={room.type}
-            className="w-full h-60 object-cover rounded-lg mb-4"
+            alt={room.number}
+            className="w-full h-64 object-cover rounded-lg"
           />
 
-          <h2 className="text-xl font-bold">
+          <h2 className="text-xl font-bold mt-4">
             Habitación {room.number}
           </h2>
 
-          <p className="text-gray-600">
-            {room.type}
-          </p>
+          <p>{room.type}</p>
 
-          <p className="mt-2">
-            Check In:
+          <p>
+            Check-In:
             {" "}
-            {bookingData.checkIn ||
-              "2026-06-20"}
+            {checkIn}
           </p>
 
           <p>
-            Check Out:
+            Check-Out:
             {" "}
-            {bookingData.checkOut ||
-              "2026-06-21"}
+            {checkOut}
           </p>
 
           <p>
@@ -150,220 +205,229 @@ export default function BookingConfirmPage() {
 
         </div>
 
-        <div className="bg-white shadow rounded-lg p-5">
+        <div>
 
-          <h2 className="text-xl font-bold mb-4">
-            Servicios Adicionales
-          </h2>
+          <div className="bg-white shadow rounded-lg p-5">
 
-          {availableServices.map(
-            (service) => (
-              <label
-                key={service.id}
-                className="flex justify-between border p-3 rounded mb-2"
-              >
-                <div>
-                  <input
-                    type="checkbox"
-                    onChange={() =>
-                      toggleService(
-                        service
-                      )
-                    }
-                  />
-                  <span className="ml-2">
+            <h3 className="font-bold text-lg mb-3">
+              Servicios adicionales
+            </h3>
+
+            {services.map(
+              (service) => (
+                <label
+                  key={service.id}
+                  className="flex justify-between mb-2"
+                >
+                  <span>
+                    <input
+                      type="checkbox"
+                      className="mr-2"
+                      onChange={() =>
+                        toggleService(
+                          service
+                        )
+                      }
+                    />
+
                     {service.name}
                   </span>
-                </div>
 
-                <span>
-                  Bs.
-                  {" "}
-                  {service.price}
-                </span>
-
-              </label>
-            )
-          )}
-
-          <hr className="my-4" />
-
-          <h2 className="font-bold mb-2">
-            Método de Pago
-          </h2>
-
-          <div className="space-y-2">
-
-            <label className="block">
-              <input
-                type="radio"
-                checked={
-                  paymentMethod ===
-                  "qr"
-                }
-                onChange={() =>
-                  setPaymentMethod(
-                    "qr"
-                  )
-                }
-              />
-              <span className="ml-2">
-                QR Simple
-              </span>
-            </label>
-
-            <label className="block">
-              <input
-                type="radio"
-                checked={
-                  paymentMethod ===
-                  "tigo"
-                }
-                onChange={() =>
-                  setPaymentMethod(
-                    "tigo"
-                  )
-                }
-              />
-              <span className="ml-2">
-                Tigo Money
-              </span>
-            </label>
-
-            <label className="block">
-              <input
-                type="radio"
-                checked={
-                  paymentMethod ===
-                  "transferencia"
-                }
-                onChange={() =>
-                  setPaymentMethod(
-                    "transferencia"
-                  )
-                }
-              />
-              <span className="ml-2">
-                Transferencia
-              </span>
-            </label>
-
-            <label className="block">
-              <input
-                type="radio"
-                checked={
-                  paymentMethod ===
-                  "efectivo"
-                }
-                onChange={() =>
-                  setPaymentMethod(
-                    "efectivo"
-                  )
-                }
-              />
-              <span className="ml-2">
-                Efectivo
-              </span>
-            </label>
-
-          </div>
-
-          <div className="mt-4 border rounded p-4">
-
-            {paymentMethod ===
-              "qr" && (
-              <div>
-                <p>
-                  Escanee este QR
-                  con la app de su banco.
-                </p>
-
-                <img
-                  src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ByteHotel"
-                  alt="QR"
-                  className="mt-3"
-                />
-              </div>
+                  <span>
+                    Bs. {service.price}
+                  </span>
+                </label>
+              )
             )}
 
-            {paymentMethod ===
-              "tigo" && (
-              <div>
-                <p>
-                  Número Tigo Money:
-                </p>
-
-                <strong>
-                  76012345
-                </strong>
-              </div>
-            )}
-
-            {paymentMethod ===
-              "transferencia" && (
-              <div>
-                <p>
-                  Banco Mercantil
-                </p>
-
-                <p>
-                  Cuenta:
-                  4012345678
-                </p>
-
-                <input
-                  type="file"
-                  className="mt-3"
-                />
-              </div>
-            )}
-
-            {paymentMethod ===
-              "efectivo" && (
-              <div>
-                <p>
-                  Pago en recepción.
-                </p>
-              </div>
-            )}
-
-          </div>
-
-          <div className="mt-6 border-t pt-4">
+            <hr className="my-4" />
 
             <p>
-              Habitación:
+              Base:
               {" "}
-              Bs.
-              {" "}
-              {roomTotal}
+              Bs. {basePrice}
             </p>
 
             <p>
               Servicios:
               {" "}
-              Bs.
-              {" "}
-              {servicesTotal}
+              Bs. {servicesPrice}
             </p>
 
-            <h3 className="text-2xl font-bold mt-2">
+            <p className="text-2xl font-bold mt-3">
               Total:
               {" "}
-              Bs.
-              {" "}
-              {total}
+              Bs. {total}
+            </p>
+
+          </div>
+
+          <div className="bg-white shadow rounded-lg p-5 mt-5">
+
+            <h3 className="font-bold text-lg mb-3">
+              Método de Pago
             </h3>
+
+            <div className="space-y-2">
+
+              <label className="block">
+                <input
+                  type="radio"
+                  value="qr"
+                  checked={
+                    paymentMethod ===
+                    "qr"
+                  }
+                  onChange={() => {
+                    setPaymentMethod(
+                      "qr"
+                    );
+                    generateQR();
+                  }}
+                />
+                {" "}
+                QR Bancario
+              </label>
+
+              <label className="block">
+                <input
+                  type="radio"
+                  value="tigo"
+                  checked={
+                    paymentMethod ===
+                    "tigo"
+                  }
+                  onChange={() => {
+                    setPaymentMethod(
+                      "tigo"
+                    );
+                    generateTigo();
+                  }}
+                />
+                {" "}
+                Tigo Money
+              </label>
+
+              <label className="block">
+                <input
+                  type="radio"
+                  value="transferencia"
+                  checked={
+                    paymentMethod ===
+                    "transferencia"
+                  }
+                  onChange={() =>
+                    setPaymentMethod(
+                      "transferencia"
+                    )
+                  }
+                />
+                {" "}
+                Transferencia
+              </label>
+
+              <label className="block">
+                <input
+                  type="radio"
+                  value="efectivo"
+                  checked={
+                    paymentMethod ===
+                    "efectivo"
+                  }
+                  onChange={() =>
+                    setPaymentMethod(
+                      "efectivo"
+                    )
+                  }
+                />
+                {" "}
+                Efectivo
+              </label>
+
+            </div>
+
+            {paymentMethod ===
+              "qr" &&
+              qrData && (
+                <div className="mt-4">
+                  <p>
+                    Escanee el QR
+                    desde su banco.
+                  </p>
+
+                  <img
+                    src={
+                      qrData.qrImage
+                    }
+                    alt="QR"
+                    className="w-56"
+                  />
+                </div>
+              )}
+
+            {paymentMethod ===
+              "tigo" &&
+              tigoData && (
+                <div className="mt-4">
+                  <p>
+                    Número:
+                    {" "}
+                    {
+                      tigoData.number
+                    }
+                  </p>
+
+                  <p>
+                    Monto:
+                    {" "}
+                    Bs.
+                    {
+                      tigoData.amount
+                    }
+                  </p>
+                </div>
+              )}
+
+            {paymentMethod ===
+              "transferencia" && (
+                <div className="mt-4">
+                  <p>
+                    Banco Unión
+                  </p>
+
+                  <p>
+                    Cuenta:
+                    123456789
+                  </p>
+
+                  <input
+                    type="file"
+                    className="mt-3"
+                  />
+                </div>
+              )}
+
+            {paymentMethod ===
+              "efectivo" && (
+                <div className="mt-4">
+                  Puede pagar
+                  directamente en
+                  recepción.
+                </div>
+              )}
 
           </div>
 
           <button
             onClick={
-              confirmBooking
+              handleConfirm
             }
-            className="w-full bg-green-600 text-white py-3 rounded mt-6"
+            disabled={loading}
+            className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg"
           >
-            Confirmar Reserva
+            {loading
+              ? "Procesando..."
+              : "Confirmar Reserva"}
           </button>
 
         </div>
