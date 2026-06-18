@@ -15,6 +15,7 @@ import ProfilePage from "./pages/cliente/ProfilePage";
 
 import CleaningPanelPage from "./pages/empleado/CleaningPanelPage";
 
+import AdminRoomsPage from "./pages/admin/AdminRoomsPage";
 import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
@@ -87,14 +88,7 @@ function App() {
 
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
 
-        <Route
-          path="/admin/rooms"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <RoomsPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/admin/rooms" element={<ProtectedRoute allowedRoles={["admin"]}><AdminRoomsPage /></ProtectedRoute>} />
         
         
         <Route
