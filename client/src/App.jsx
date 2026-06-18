@@ -59,8 +59,8 @@ function App() {
         <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/rooms" element={<ProtectedRoute allowedRoles={["admin"]}><RoomsPage /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><AdminUsersPage /></ProtectedRoute>} />
         
-        <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPlaceholder title="Usuarios" /></ProtectedRoute>} />
         <Route path="/admin/services" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPlaceholder title="Servicios" /></ProtectedRoute>} />
         <Route
   path="/admin/bookings"
