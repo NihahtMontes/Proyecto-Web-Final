@@ -6,8 +6,12 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState([]);
 
   const loadBookings = async () => {
-    const res = await bookingAPI.getAll();
-    setBookings(res.data);
+    try {
+      const res = await bookingAPI.getAll();
+      setBookings(res.data);
+    } catch (error) {
+      toast.error("Error al cargar reservas");
+    }
   };
 
   useEffect(() => {
@@ -15,9 +19,14 @@ export default function AdminBookingsPage() {
   }, []);
 
   const changeStatus = async (id, status) => {
-    await bookingAPI.updateStatus(id, status);
-    toast.success("Reserva actualizada");
-    loadBookings();
+    try {
+      await bookingAPI.updateStatus(id, status);
+      toast.success("Reserva actualizada");
+      await loadBookings();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Error al actualizar reserva");
+      console.error(error);
+    }
   };
 
   return (
