@@ -47,7 +47,7 @@ const createBooking = async (req, res) => {
       }
     }
 
-    const basePrice = room.price * nights;
+    const basePrice = room.pricePerNight * nights;
     const totalPrice = basePrice + servicesTotal;
 
     const booking = await Booking.create({
