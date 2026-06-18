@@ -27,7 +27,6 @@ const createBooking = async (req, res) => {
 
     const inDate = new Date(checkIn);
     const outDate = new Date(checkOut);
-
     const nights = Math.ceil((outDate - inDate) / (1000 * 60 * 60 * 24));
 
     if (nights <= 0) {
@@ -62,7 +61,6 @@ const createBooking = async (req, res) => {
 
       if (service) {
         const quantity = Number(item.quantity || 1);
-
         servicesTotal += Number(service.price || 0) * quantity;
 
         formattedServices.push({
@@ -109,52 +107,92 @@ const createBooking = async (req, res) => {
 };
 
 const getMyBookings = async (req, res) => {
-  const bookings = await Booking.find({ user: req.user._id })
-    .populate("room")
-    .populate("services.service")
-    .sort("-createdAt");
+  try {
+    const bookings = await Booking.find({ user: req.user._id })
+      .populate("room")
+      .populate("services.service")
+      .sort("-createdAt");
 
-  res.json(bookings);
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error obteniendo reservas",
+      error: error.message,
+    });
+  }
 };
 
 const cancelBooking = async (req, res) => {
-  const booking = await Booking.findOneAndUpdate(
-    { _id: req.params.id, user: req.user._id },
-    { status: "cancelada" },
-    { new: true }
-  );
+  try {
+    const booking = await Booking.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { status: "cancelada" },
+      { new: true }
+    );
 
-  if (!booking) {
-    return res.status(404).json({ message: "Reserva no encontrada" });
+    if (!booking) {
+      return res.status(404).json({ message: "Reserva no encontrada" });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error cancelando reserva",
+      error: error.message,
+    });
   }
-
-  res.json(booking);
 };
 
 const getAllBookings = async (req, res) => {
-  const bookings = await Booking.find()
-    .populate("user", "name email")
-    .populate("room", "number type pricePerNight status")
-    .populate("services.service")
-    .sort("-createdAt");
+  try {
+    const bookings = await Booking.find()
+      .populate("user", "name email")
+      .populate("room", "number type pricePerNight status")
+      .populate("services.service")
+      .sort("-createdAt");
 
-  res.json(bookings);
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error obteniendo reservas",
+      error: error.message,
+    });
+  }
 };
 
 const updateBookingStatus = async (req, res) => {
-  const { status } = req.body;
+  try {
+    const { status } = req.body;
 
-  const booking = await Booking.findByIdAndUpdate(
-    req.params.id,
-    { status },
-    { new: true }
-  );
+    const allowedStatuses = [
+      "pendiente",
+      "confirmada",
+      "en_curso",
+      "completada",
+      "cancelada",
+    ];
 
-  if (!booking) {
-    return res.status(404).json({ message: "Reserva no encontrada" });
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: "Estado inválido" });
+    }
+
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ message: "Reserva no encontrada" });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error actualizando reserva",
+      error: error.message,
+    });
   }
-
-  res.json(booking);
 };
 
 const createReview = async (req, res) => {
