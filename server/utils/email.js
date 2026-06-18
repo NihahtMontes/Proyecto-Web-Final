@@ -15,7 +15,6 @@ const sendBookingConfirmation = async (userEmail, bookingDetails) => {
       to: userEmail,
       subject: 'Confirmación de Reserva - ByteHotel',
       text: `Tu reserva ha sido confirmada. Detalles: ${JSON.stringify(bookingDetails)}`,
-      // Aquí más adelante puedes armar un HTML bonito
     };
     await transporter.sendMail(mailOptions);
   } catch (error) {
@@ -24,15 +23,45 @@ const sendBookingConfirmation = async (userEmail, bookingDetails) => {
 };
 
 const sendCheckInReminder = async (userEmail, bookingDetails) => {
-  // Lógica similar para el recordatorio de check-in
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: 'Recordatorio de Check-In - ByteHotel',
+      text: `Hola. Te recordamos que tu fecha de ingreso está cerca. Detalles de tu estadía: ${JSON.stringify(bookingDetails)}`,
+    };
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error enviando el recordatorio de check-in:', error);
+  }
 };
 
 const sendCheckOutReminder = async (userEmail, bookingDetails) => {
-  // Lógica similar para el recordatorio de check-out
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: 'Recordatorio de Check-Out - ByteHotel',
+      text: `Hola. Te recordamos que tu fecha de salida se cumple hoy. Por favor coordina tu salida. Detalles: ${JSON.stringify(bookingDetails)}`,
+    };
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error enviando el recordatorio de check-out:', error);
+  }
 };
 
 const sendReviewInvitation = async (userEmail, bookingDetails) => {
-  // Lógica similar para pedir calificación al terminar
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: '¡Cuéntanos tu experiencia! - ByteHotel',
+      text: `Gracias por hospedarte en ByteHotel. Nos encantaría recibir tu opinión sobre tu estadía. Detalles: ${JSON.stringify(bookingDetails)}`,
+    };
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error enviando la invitación de reseña:', error);
+  }
 };
 
 module.exports = {
