@@ -15,6 +15,7 @@ import ProfilePage from "./pages/cliente/ProfilePage";
 
 import CleaningPanelPage from "./pages/empleado/CleaningPanelPage";
 
+import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
 import AdminCleaningPage from "./pages/admin/AdminCleaningPage";
@@ -94,7 +95,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        
+        
         <Route
           path="/admin/bookings"
           element={
@@ -117,7 +119,7 @@ function App() {
           path="/admin/services"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminPlaceholder title="Gestión de Servicios" />
+              <AdminServicesPage />
             </ProtectedRoute>
           }
         />
