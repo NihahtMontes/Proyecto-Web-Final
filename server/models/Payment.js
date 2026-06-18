@@ -1,66 +1,57 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema({
   booking: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Booking',
-    required: [true, 'La reserva es obligatoria']
+    ref: "Booking",
+    required: [true, "La reserva es obligatoria"],
   },
 
   method: {
     type: String,
-    enum: [
-      'qr_simple',
-      'tigo_money',
-      'transferencia',
-      'efectivo'
-    ],
-    required: [true, 'El método de pago es obligatorio']
+    enum: ["qr_simple", "tigo_money", "transferencia", "efectivo"],
+    required: [true, "El método de pago es obligatorio"],
   },
 
   amount: {
     type: Number,
-    required: [true, 'El monto es obligatorio']
+    required: [true, "El monto es obligatorio"],
   },
 
   currency: {
     type: String,
-    default: 'BOB'
+    default: "BOB",
   },
 
   status: {
     type: String,
-    enum: [
-      'pendiente',
-      'completado',
-      'fallido'
-    ],
-    default: 'pendiente'
+    enum: ["pendiente", "verificado", "fallido"],
+    default: "pendiente",
   },
 
   transactionId: {
     type: String,
-    default: ''
+    default: "",
   },
 
   comprobante: {
     type: String,
-    default: ''
+    default: "",
   },
 
   verifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: "User",
   },
 
   verifiedAt: {
-    type: Date
+    type: Date,
   },
 
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('Payment', paymentSchema);
+module.exports = mongoose.model("Payment", paymentSchema);
