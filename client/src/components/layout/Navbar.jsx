@@ -84,7 +84,7 @@ export default function Navbar() {
     if (user.role === "admin") {
       return (
         <>
-          <Link to="/admin/dashboard">
+          <Link to="/admin">
             Dashboard
           </Link>
 
