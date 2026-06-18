@@ -3,16 +3,11 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/ui/ProtectedRoute";
 
-import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import HomePage from "./pages/public/HomePage";
 import RoomsPage from "./pages/public/RoomsPage";
 import RoomDetailPage from "./pages/public/RoomDetailPage";
 import LoginPage from "./pages/public/LoginPage";
 import RegisterPage from "./pages/public/RegisterPage";
-import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
-import AdminCleaningPage from "./pages/admin/AdminCleaningPage";
-import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
-import AdminUsersPage from "./pages/admin/AdminUsersPage";
 
 import BookingConfirmPage from "./pages/cliente/BookingConfirmPage";
 import MyBookingsPage from "./pages/cliente/MyBookingsPage";
@@ -20,18 +15,11 @@ import ProfilePage from "./pages/cliente/ProfilePage";
 
 import CleaningPanelPage from "./pages/empleado/CleaningPanelPage";
 
-function AdminDashboard() {
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">
-        Panel Administrador
-      </h1>
-      <p className="text-gray-600">
-        Bienvenido al panel de administración de ByteHotel.
-      </p>
-    </div>
-  );
-}
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
+import AdminCleaningPage from "./pages/admin/AdminCleaningPage";
+import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 
 function AdminPlaceholder({ title }) {
   return (
@@ -51,43 +39,108 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        <Route path="/reservar" element={<ProtectedRoute allowedRoles={["cliente"]}><BookingConfirmPage /></ProtectedRoute>} />
-        <Route path="/mis-reservas" element={<ProtectedRoute allowedRoles={["cliente"]}><MyBookingsPage /></ProtectedRoute>} />
-        <Route path="/perfil" element={<ProtectedRoute allowedRoles={["cliente", "empleado", "admin"]}><ProfilePage /></ProtectedRoute>} />
-        <Route path="/limpieza" element={<ProtectedRoute allowedRoles={["empleado", "admin"]}><CleaningPanelPage /></ProtectedRoute>} />
+        <Route
+          path="/reservar"
+          element={
+            <ProtectedRoute allowedRoles={["cliente"]}>
+              <BookingConfirmPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+        <Route
+          path="/mis-reservas"
+          element={
+            <ProtectedRoute allowedRoles={["cliente"]}>
+              <MyBookingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute allowedRoles={["cliente", "empleado", "admin"]}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/limpieza"
+          element={
+            <ProtectedRoute allowedRoles={["empleado"]}>
+              <CleaningPanelPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
-        <Route path="/admin/rooms" element={<ProtectedRoute allowedRoles={["admin"]}><RoomsPage /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><AdminUsersPage /></ProtectedRoute>} />
-        
-        <Route path="/admin/services" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPlaceholder title="Servicios" /></ProtectedRoute>} />
-        <Route
-  path="/admin/bookings"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminBookingsPage />
-    </ProtectedRoute>
-  }
-/>
 
-<Route
-  path="/admin/cleaning"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminCleaningPage />
-    </ProtectedRoute>
-  }
-/>
         <Route
-  path="/admin/payments"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminPaymentsPage />
-    </ProtectedRoute>
-  }/>
+          path="/admin/rooms"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RoomsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="*" element={<Navigate to="/admin" replace />} />
+        <Route
+          path="/admin/bookings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminBookingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminUsersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/services"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminPlaceholder title="Gestión de Servicios" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/cleaning"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminCleaningPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/payments"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminPaymentsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );
