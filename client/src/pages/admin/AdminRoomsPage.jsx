@@ -4,10 +4,15 @@ import { roomAPI } from "../../services/api";
 
 export default function AdminRoomsPage() {
   const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const loadRooms = async () => {
-    const res = await roomAPI.getAll();
-    setRooms(res.data);
+    try {
+      const res = await roomAPI.getAll();
+      setRooms(res.data);
+    } catch (error) {
+      toast.error("Error al cargar habitaciones");
+    }
   };
 
   useEffect(() => {
@@ -15,9 +20,17 @@ export default function AdminRoomsPage() {
   }, []);
 
   const changeStatus = async (id, status) => {
-    await roomAPI.updateStatus(id, status);
-    toast.success("Estado actualizado");
-    loadRooms();
+    try {
+      setLoading(true);
+      await roomAPI.updateStatus(id, status);
+      toast.success("Estado actualizado");
+      await loadRooms();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Error al actualizar estado");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,6 +46,7 @@ export default function AdminRoomsPage() {
             <p><b>Estado:</b> {room.status}</p>
 
             <select
+              disabled={loading}
               className="border p-2 rounded mt-3"
               value={room.status}
               onChange={(e) => changeStatus(room._id, e.target.value)}
