@@ -1,93 +1,96 @@
-const CleaningTask = require('../models/CleaningTask');
-const Room = require('../models/Room');
+const CleaningTask = require("../models/CleaningTask");
+const Room = require("../models/Room");
+const User = require("../models/User");
 
 const getMyTasks = async (req, res) => {
-  try {
-    const tasks = await CleaningTask.find({ employee: req.user._id })
-      .populate('room', 'number type status')
-      .sort('-createdAt');
-    res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener tus tareas', error: error.message });
-  }
+  const tasks = await CleaningTask.find({ employee: req.user._id })
+    .populate("room", "number type status")
+    .populate("employee", "name email role")
+    .sort("-createdAt");
+
+  res.json(tasks);
 };
 
 const getAllTasks = async (req, res) => {
-  try {
-    const { status } = req.query;
-    let query = {};
-    if (status) query.status = status;
+  const tasks = await CleaningTask.find()
+    .populate("room", "number type status")
+    .populate("employee", "name email role")
+    .sort("-createdAt");
 
-    const tasks = await CleaningTask.find(query)
-      .populate('room', 'number type status')
-      .populate('employee', 'name email')
-      .sort('-createdAt');
-    res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener todas las tareas', error: error.message });
-  }
+  res.json(tasks);
 };
 
 const assignTask = async (req, res) => {
   try {
-    const { roomId, employeeId } = req.body;
+    const { roomId, employeeId, instructions } = req.body;
+
+    if (!roomId || !employeeId) {
+      return res.status(400).json({ message: "Habitación y empleado son obligatorios" });
+    }
 
     const room = await Room.findById(roomId);
-    if (!room || room.status !== 'sucio') {
-      return res.status(400).json({ message: 'La habitación no existe o no requiere limpieza' });
+    if (!room) {
+      return res.status(404).json({ message: "Habitación no encontrada" });
+    }
+
+    const employee = await User.findById(employeeId);
+    if (!employee || employee.role !== "empleado") {
+      return res.status(404).json({ message: "Empleado no encontrado" });
     }
 
     const task = await CleaningTask.create({
       room: roomId,
       employee: employeeId,
-      status: 'pendiente'
+      instructions,
+      status: "pendiente",
     });
 
-    // Actualizamos la habitación para indicar que está en proceso de limpieza
-    room.status = 'limpieza';
+    room.status = "limpieza";
     await room.save();
 
     res.status(201).json(task);
   } catch (error) {
-    res.status(500).json({ message: 'Error al asignar la tarea', error: error.message });
+    res.status(500).json({
+      message: "Error al asignar la tarea",
+      error: error.message,
+    });
   }
 };
 
 const startTask = async (req, res) => {
-  try {
-    const task = await CleaningTask.findById(req.params.id);
-    if (!task || task.employee.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'No autorizado o tarea no encontrada' });
-    }
+  const task = await CleaningTask.findById(req.params.id);
 
-    task.status = 'en_progreso';
-    task.startedAt = Date.now();
-    await task.save();
-
-    res.json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al iniciar la tarea', error: error.message });
+  if (!task || task.employee.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "No autorizado" });
   }
+
+  task.status = "en_progreso";
+  task.startedAt = Date.now();
+  await task.save();
+
+  res.json(task);
 };
 
 const completeTask = async (req, res) => {
-  try {
-    const task = await CleaningTask.findById(req.params.id);
-    if (!task || task.employee.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'No autorizado o tarea no encontrada' });
-    }
+  const task = await CleaningTask.findById(req.params.id);
 
-    task.status = 'completada';
-    task.completedAt = Date.now();
-    await task.save();
-
-    // La habitación vuelve a estar lista para nuevos clientes
-    await Room.findByIdAndUpdate(task.room, { status: 'disponible' });
-
-    res.json(task);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al completar la tarea', error: error.message });
+  if (!task || task.employee.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "No autorizado" });
   }
+
+  task.status = "completada";
+  task.completedAt = Date.now();
+  await task.save();
+
+  await Room.findByIdAndUpdate(task.room, { status: "disponible" });
+
+  res.json(task);
 };
 
-module.exports = { getMyTasks, getAllTasks, assignTask, startTask, completeTask };
+module.exports = {
+  getMyTasks,
+  getAllTasks,
+  assignTask,
+  startTask,
+  completeTask,
+};
