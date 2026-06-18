@@ -2,47 +2,29 @@ const mongoose = require("mongoose");
 
 const cleaningTaskSchema = new mongoose.Schema(
   {
-    roomNumber: {
-      type: String,
-      required: [true, "El número de habitación es obligatorio"],
-      trim: true,
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room",
+      required: true,
     },
-
     employee: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "El empleado es obligatorio"],
+      required: true,
     },
-
-    employeeEmail: {
-      type: String,
-      required: [true, "El email del empleado es obligatorio"],
-      lowercase: true,
-      trim: true,
-    },
-
     instructions: {
       type: String,
       default: "",
     },
-
     status: {
       type: String,
-      enum: ["pendiente", "en_proceso", "completada"],
+      enum: ["pendiente", "en_progreso", "completada"],
       default: "pendiente",
     },
-
-    startedAt: {
-      type: Date,
-    },
-
-    completedAt: {
-      type: Date,
-    },
+    startedAt: Date,
+    completedAt: Date,
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("CleaningTask", cleaningTaskSchema);
