@@ -86,6 +86,11 @@ export const bookingAPI = {
 };
 
 export const cleaningAPI = {
+  getMyTasks: () => api.get("/cleaning/me"),
+  create: (data) => api.post("/cleaning", data),
+};
+
+export const cleaningAPI = {
   getMyTasks: () =>
     api.get("/cleaning/me"),
 
@@ -165,10 +170,7 @@ export const dashboardAPI = {
     ),
 };
 
-export const cleaningAPI = {
-  getMyTasks: () => api.get("/cleaning/me"),
-  create: (data) => api.post("/cleaning", data),
-};
+
 
 export const paymentAPI = {
   generateQR: (data) =>
