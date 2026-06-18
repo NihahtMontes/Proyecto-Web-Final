@@ -12,6 +12,7 @@ import RegisterPage from "./pages/public/RegisterPage";
 import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
 import AdminCleaningPage from "./pages/admin/AdminCleaningPage";
 import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 
 import BookingConfirmPage from "./pages/cliente/BookingConfirmPage";
 import MyBookingsPage from "./pages/cliente/MyBookingsPage";
