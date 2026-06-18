@@ -41,7 +41,6 @@ export const bookingAPI = {
 
 export const cleaningAPI = {
   getMyTasks: () => api.get("/cleaning/me"),
-  create: (data) => api.post("/cleaning", data),
   getAll: (params) => api.get("/cleaning/all", { params }),
   assign: (data) => api.post("/cleaning/assign", data),
   start: (id) => api.patch(`/cleaning/${id}/start`),
