@@ -11,6 +11,7 @@ import LoginPage from "./pages/public/LoginPage";
 import RegisterPage from "./pages/public/RegisterPage";
 import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
 import AdminCleaningPage from "./pages/admin/AdminCleaningPage";
+import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
 
 import BookingConfirmPage from "./pages/cliente/BookingConfirmPage";
 import MyBookingsPage from "./pages/cliente/MyBookingsPage";
@@ -77,7 +78,13 @@ function App() {
     </ProtectedRoute>
   }
 />
-        <Route path="/admin/payments" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPlaceholder title="Pagos" /></ProtectedRoute>} />
+        <Route
+  path="/admin/payments"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminPaymentsPage />
+    </ProtectedRoute>
+  }/>
 
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
