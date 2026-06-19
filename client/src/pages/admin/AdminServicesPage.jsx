@@ -1,141 +1,49 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import { serviceAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 export default function AdminServicesPage() {
   const [services, setServices] = useState([]);
 
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    price: "",
-  });
+  useEffect(() => {
+    loadServices();
+  }, []);
 
   const loadServices = async () => {
     try {
       const res = await serviceAPI.getAll();
       setServices(res.data);
     } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    loadServices();
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      await serviceAPI.create(form);
-
-      toast.success("Servicio creado");
-
-      setForm({
-        name: "",
-        description: "",
-        price: "",
-      });
-
-      loadServices();
-    } catch (error) {
-      toast.error("Error al crear servicio");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await serviceAPI.delete(id);
-
-      toast.success("Servicio eliminado");
-
-      loadServices();
-    } catch (error) {
-      toast.error("Error al eliminar");
+      toast.error("Error al cargar servicios");
     }
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">
-        Gestión de Servicios
-      </h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-xl shadow mb-8 grid gap-4 max-w-xl"
-      >
-        <input
-          className="border p-3 rounded"
-          placeholder="Nombre"
-          value={form.name}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              name: e.target.value,
-            })
-          }
-        />
-
-        <textarea
-          className="border p-3 rounded"
-          placeholder="Descripción"
-          value={form.description}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              description: e.target.value,
-            })
-          }
-        />
-
-        <input
-          type="number"
-          className="border p-3 rounded"
-          placeholder="Precio"
-          value={form.price}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              price: e.target.value,
-            })
-          }
-        />
-
-        <button className="bg-blue-600 text-white py-3 rounded">
-          Crear Servicio
+    <div className="p-8 max-w-4xl mx-auto w-full">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-white">Servicios Extra</h1>
+        <button className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded transition shadow-lg">
+          + Nuevo Servicio
         </button>
-      </form>
+      </div>
 
-      <div className="grid gap-4">
-        {services.map((service) => (
-          <div
-            key={service._id}
-            className="bg-white p-4 rounded-xl shadow flex justify-between"
-          >
-            <div>
-              <h3 className="font-bold">
-                {service.name}
-              </h3>
-
-              <p>
-                {service.description}
-              </p>
-
-              <p>
-                Bs. {service.price}
-              </p>
+      <div className="space-y-4">
+        {services.map((s) => (
+          <div key={s._id} className="bg-gray-800 border border-gray-700 p-5 rounded-xl flex flex-col sm:flex-row justify-between items-center shadow hover:shadow-emerald-900/20 transition">
+            <div className="flex-1 text-center sm:text-left mb-4 sm:mb-0">
+              <h3 className="text-xl font-bold text-white">{s.name}</h3>
+              <p className="text-sm text-gray-400">{s.description || "Sin descripción"}</p>
             </div>
-
-            <button
-              onClick={() =>
-                handleDelete(service._id)
-              }
-              className="text-red-600"
-            >
-              Eliminar
-            </button>
+            
+            <div className="flex items-center gap-6">
+              <div className="text-right">
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Precio</p>
+                <p className="text-lg font-black text-emerald-400">Bs. {s.price}</p>
+              </div>
+              <button className="text-gray-400 hover:text-white px-3 py-1 bg-gray-700 rounded transition">
+                Editar
+              </button>
+            </div>
           </div>
         ))}
       </div>

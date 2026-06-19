@@ -25,24 +25,24 @@ export default function AdminPaymentsPage() {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Gestión de Pagos</h1>
+    <div className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-white">Gestión de Pagos</h1>
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-6">
         {payments.length === 0 ? (
-          <p>No hay pagos registrados.</p>
+          <p className="text-gray-400">No hay pagos registrados.</p>
         ) : (
           <div className="grid gap-4">
             {payments.map((payment) => (
-              <div key={payment._id} className="border rounded-lg p-4">
-                <p><b>Monto:</b> Bs. {payment.amount}</p>
-                <p><b>Método:</b> {payment.method}</p>
-                <p><b>Estado:</b> {payment.status}</p>
+              <div key={payment._id} className="border border-gray-600 rounded-lg p-4 bg-gray-900/50">
+                <p className="text-gray-300"><b>Monto:</b> <span className="text-emerald-400 font-bold">Bs. {payment.amount}</span></p>
+                <p className="text-gray-300"><b>Método:</b> {payment.method}</p>
+                <p className="text-gray-300"><b>Estado:</b> <span className="capitalize">{payment.status}</span></p>
 
                 {payment.status !== "verificado" && (
                   <button
                     onClick={() => handleVerify(payment._id)}
-                    className="mt-3 bg-green-600 text-white px-4 py-2 rounded"
+                    className="mt-3 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded transition-colors"
                   >
                     Verificar pago
                   </button>

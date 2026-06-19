@@ -1,78 +1,47 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import { userAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    phone: "",
-    role: "empleado",
-  });
-
-  const loadUsers = async () => {
-    const res = await userAPI.getAll();
-    setUsers(res.data);
-  };
 
   useEffect(() => {
     loadUsers();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const loadUsers = async () => {
     try {
-      await userAPI.create(form);
-      toast.success("Usuario creado");
-      setForm({ name: "", email: "", password: "", phone: "", role: "empleado" });
-      loadUsers();
+      const res = await userAPI.getAll();
+      setUsers(res.data);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error al crear usuario");
+      toast.error("Error al cargar usuarios");
     }
   };
 
-  const handleDelete = async (id) => {
-    await userAPI.delete(id);
-    toast.success("Usuario eliminado");
-    loadUsers();
+  const getRoleColor = (role) => {
+    if (role === "admin") return "bg-purple-900/50 text-purple-400 border-purple-700";
+    if (role === "empleado") return "bg-blue-900/50 text-blue-400 border-blue-700";
+    return "bg-emerald-900/50 text-emerald-400 border-emerald-700";
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Gestión de Usuarios</h1>
+    <div className="p-8 max-w-7xl mx-auto w-full">
+      <h1 className="text-3xl font-bold mb-6 text-white">Gestión de Usuarios</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow grid gap-4 max-w-xl mb-8">
-        <input className="border p-3 rounded" placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        <input className="border p-3 rounded" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-        <input className="border p-3 rounded" placeholder="Contraseña" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
-        <input className="border p-3 rounded" placeholder="Teléfono" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-
-        <select className="border p-3 rounded" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-          <option value="empleado">Empleado</option>
-          <option value="admin">Administrador</option>
-          <option value="cliente">Cliente</option>
-        </select>
-
-        <button className="bg-blue-600 text-white py-3 rounded-lg">
-          Crear usuario
-        </button>
-      </form>
-
-      <div className="grid gap-4">
-        {users.map((user) => (
-          <div key={user._id} className="bg-white p-4 rounded-xl shadow flex justify-between">
-            <div>
-              <p><b>{user.name}</b></p>
-              <p>{user.email}</p>
-              <p>Rol: {user.role}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {users.map((u) => (
+          <div key={u._id} className="bg-gray-800 border border-gray-700 p-6 rounded-xl flex flex-col items-center text-center shadow-lg hover:border-emerald-500/50 transition">
+            {/* Avatar Placeholder */}
+            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4 border-2 border-gray-600">
+              <span className="text-2xl font-black text-gray-400">{u.name.charAt(0).toUpperCase()}</span>
             </div>
-
-            <button onClick={() => handleDelete(user._id)} className="text-red-600">
-              Eliminar
-            </button>
+            
+            <h3 className="text-lg font-bold text-white w-full truncate">{u.name}</h3>
+            <p className="text-sm text-gray-400 w-full truncate mb-4">{u.email}</p>
+            
+            <span className={`px-3 py-1 text-xs font-bold uppercase rounded-full border ${getRoleColor(u.role)}`}>
+              {u.role}
+            </span>
           </div>
         ))}
       </div>

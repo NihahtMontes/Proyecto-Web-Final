@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import { bookingAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState([]);
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
 
   const loadBookings = async () => {
     try {
@@ -14,51 +18,56 @@ export default function AdminBookingsPage() {
     }
   };
 
-  useEffect(() => {
-    loadBookings();
-  }, []);
-
-  const changeStatus = async (id, status) => {
+  const updateStatus = async (id, status) => {
     try {
       await bookingAPI.updateStatus(id, status);
-      toast.success("Reserva actualizada");
-      await loadBookings();
+      toast.success("Estado actualizado");
+      loadBookings();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error al actualizar reserva");
-      console.error(error);
+      toast.error("Error al actualizar");
     }
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Gestión de Reservas</h1>
+    <div className="p-8 max-w-7xl mx-auto w-full">
+      <h1 className="text-3xl font-bold mb-6 text-white">Control de Reservas</h1>
 
-      <div className="grid gap-4">
-        {bookings.map((booking) => (
-          <div key={booking._id} className="bg-white p-5 rounded-xl shadow">
-            <p><b>Cliente:</b> {booking.user?.name || "Sin cliente"}</p>
-            <p><b>Email:</b> {booking.user?.email || "Sin email"}</p>
-            <p><b>Habitación:</b> {booking.room?.number || "Sin habitación"}</p>
-            <p><b>Entrada:</b> {booking.checkIn?.slice(0, 10)}</p>
-            <p><b>Salida:</b> {booking.checkOut?.slice(0, 10)}</p>
-            <p><b>Total:</b> Bs. {booking.totalPrice}</p>
-            <p><b>Estado:</b> {booking.status}</p>
-
-            <div className="flex gap-3 mt-4">
-              <button onClick={() => changeStatus(booking._id, "confirmada")} className="bg-green-600 text-white px-4 py-2 rounded">
-                Confirmar
-              </button>
-
-              <button onClick={() => changeStatus(booking._id, "cancelada")} className="bg-red-600 text-white px-4 py-2 rounded">
-                Cancelar
-              </button>
-
-              <button onClick={() => changeStatus(booking._id, "completada")} className="bg-blue-600 text-white px-4 py-2 rounded">
-                Completar
-              </button>
-            </div>
-          </div>
-        ))}
+      <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-lg overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-900 border-b border-gray-700 text-emerald-400 uppercase text-sm">
+              <th className="p-4 font-semibold">Cliente</th>
+              <th className="p-4 font-semibold">Habitación</th>
+              <th className="p-4 font-semibold">Check-In</th>
+              <th className="p-4 font-semibold">Check-Out</th>
+              <th className="p-4 font-semibold">Total</th>
+              <th className="p-4 font-semibold text-center">Estado / Acción</th>
+            </tr>
+          </thead>
+          <tbody className="text-gray-300">
+            {bookings.map((b) => (
+              <tr key={b._id} className="border-b border-gray-700 hover:bg-gray-700/50 transition">
+                <td className="p-4 font-medium text-white">{b.user?.name || "N/A"}</td>
+                <td className="p-4">#{b.room?.number || b.room}</td>
+                <td className="p-4">{new Date(b.checkIn).toLocaleDateString()}</td>
+                <td className="p-4">{new Date(b.checkOut).toLocaleDateString()}</td>
+                <td className="p-4 font-bold text-emerald-400">Bs. {b.totalPrice}</td>
+                <td className="p-4 text-center">
+                  <select
+                    value={b.status}
+                    onChange={(e) => updateStatus(b._id, e.target.value)}
+                    className="bg-gray-900 border border-gray-600 text-white px-3 py-1.5 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  >
+                    <option value="pendiente">Pendiente</option>
+                    <option value="confirmada">Confirmada</option>
+                    <option value="completada">Completada</option>
+                    <option value="cancelada">Cancelada</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

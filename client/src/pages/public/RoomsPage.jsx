@@ -1,73 +1,94 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import RoomCard from "../../components/ui/RoomCard";
 import { roomAPI } from "../../services/api";
+import RoomCard from "../../components/ui/RoomCard";
+import toast from "react-hot-toast";
 
 export default function RoomsPage() {
-  const navigate = useNavigate();
-
   const [rooms, setRooms] = useState([]);
-  const [typeFilter, setTypeFilter] = useState("");
-  const [capacityFilter, setCapacityFilter] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  // Estados para los filtros
+  const [filterType, setFilterType] = useState("");
+  const [filterPrice, setFilterPrice] = useState("");
 
   useEffect(() => {
-    const loadRooms = async () => {
-      const res = await roomAPI.getAll();
-      setRooms(res.data);
-    };
-
     loadRooms();
   }, []);
 
-  const filteredRooms = rooms.filter((room) => {
-    const typeOk = !typeFilter || room.type === typeFilter;
-    const capacityOk = !capacityFilter || room.capacity >= Number(capacityFilter);
-    const minOk = !minPrice || room.pricePerNight >= Number(minPrice);
-    const maxOk = !maxPrice || room.pricePerNight <= Number(maxPrice);
-
-    return typeOk && capacityOk && minOk && maxOk;
-  });
-
-  const handleViewRoom = (room) => {
-    navigate(`/habitaciones/${room._id}`);
+  const loadRooms = async () => {
+    try {
+      setLoading(true);
+      const res = await roomAPI.getAll();
+      setRooms(res.data);
+    } catch (error) {
+      toast.error("Error al cargar habitaciones");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Lógica de filtrado
+  const filteredRooms = rooms.filter(room => {
+    if (filterType && room.type.toLowerCase() !== filterType.toLowerCase()) return false;
+    if (filterPrice) {
+      if (filterPrice === "low" && room.pricePerNight > 200) return false;
+      if (filterPrice === "high" && room.pricePerNight <= 200) return false;
+    }
+    return true;
+  });
+
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-4xl font-bold mb-8">Habitaciones</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <h1 className="text-3xl font-black text-white mb-6">Nuestras Habitaciones</h1>
 
-      <div className="grid lg:grid-cols-4 gap-6">
-        <div className="bg-white p-4 rounded-lg shadow h-fit">
-          <h2 className="text-xl font-bold mb-4">Filtros</h2>
-
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-full border p-2 rounded mb-3">
-            <option value="">Todos los tipos</option>
-            {[...new Set(rooms.map((r) => r.type))].map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-
-          <input type="number" placeholder="Capacidad mínima" value={capacityFilter} onChange={(e) => setCapacityFilter(e.target.value)} className="w-full border p-2 rounded mb-3" />
-          <input type="number" placeholder="Precio mínimo" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="w-full border p-2 rounded mb-3" />
-          <input type="number" placeholder="Precio máximo" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="w-full border p-2 rounded" />
+      {/* Barra de Filtros Horizontal */}
+      <div className="bg-gray-800 border border-gray-700 p-4 rounded-xl mb-8 flex flex-col md:flex-row gap-4 items-center shadow-lg">
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <span className="text-emerald-400 font-bold">Filtrar por:</span>
         </div>
+        
+        <select 
+          value={filterType} 
+          onChange={(e) => setFilterType(e.target.value)}
+          className="w-full md:w-auto bg-gray-900 border border-gray-600 text-white p-2.5 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+        >
+          <option value="">Cualquier Tipo</option>
+          <option value="simple">Simple</option>
+          <option value="doble">Doble</option>
+          <option value="suite">Suite</option>
+        </select>
 
-        <div className="lg:col-span-3">
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredRooms.map((room) => (
-              <RoomCard key={room._id} room={room} onClick={handleViewRoom} />
-            ))}
-          </div>
+        <select 
+          value={filterPrice} 
+          onChange={(e) => setFilterPrice(e.target.value)}
+          className="w-full md:w-auto bg-gray-900 border border-gray-600 text-white p-2.5 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+        >
+          <option value="">Cualquier Precio</option>
+          <option value="low">Económicas (Menos de Bs. 200)</option>
+          <option value="high">Premium (Más de Bs. 200)</option>
+        </select>
 
-          {filteredRooms.length === 0 && (
-            <div className="bg-white p-8 rounded-lg shadow text-center mt-6">
-              <p className="text-gray-500">No se encontraron habitaciones.</p>
-            </div>
+        <button 
+          onClick={() => { setFilterType(""); setFilterPrice(""); }}
+          className="w-full md:w-auto bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded transition"
+        >
+          Limpiar Filtros
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center text-emerald-400 py-10">Cargando habitaciones...</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRooms.length > 0 ? (
+            filteredRooms.map((room) => (
+              <RoomCard key={room._id} room={room} />
+            ))
+          ) : (
+            <p className="text-gray-400 col-span-full text-center py-10">No se encontraron habitaciones con esos filtros.</p>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
