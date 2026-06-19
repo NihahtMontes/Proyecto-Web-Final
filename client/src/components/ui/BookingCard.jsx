@@ -1,37 +1,21 @@
-export default function BookingCard({
-  booking,
-  payment,
-  onCancel,
-  onReview,
-  onPay,
-}) {
+export default function BookingCard({ booking, payment, onCancel, onReview, onPay }) {
   const getStatusColor = (status) => {
     switch (status) {
-      case "pendiente":
-        return "bg-yellow-900/50 text-yellow-400 border border-yellow-700";
-      case "confirmada":
-        return "bg-blue-900/50 text-blue-400 border border-blue-700";
-      case "completada":
-        return "bg-emerald-900/50 text-emerald-400 border border-emerald-700";
-      case "cancelada":
-        return "bg-red-900/50 text-red-400 border border-red-700";
-      default:
-        return "bg-gray-700 text-gray-300 border border-gray-600";
+      case "pendiente": return "bg-yellow-900/50 text-yellow-400 border border-yellow-700";
+      case "confirmada": return "bg-blue-900/50 text-blue-400 border border-blue-700";
+      case "completada": return "bg-emerald-900/50 text-emerald-400 border border-emerald-700";
+      case "cancelada": return "bg-red-900/50 text-red-400 border border-red-700";
+      default: return "bg-gray-700 text-gray-300 border border-gray-600";
     }
   };
 
   const getPaymentLabel = (method) => {
     switch (method) {
-      case "qr_simple":
-        return "QR Bancario";
-      case "tigo_money":
-        return "Tigo Money";
-      case "transferencia":
-        return "Transferencia";
-      case "efectivo":
-        return "Efectivo";
-      default:
-        return "No definido";
+      case "qr_simple": return "QR Bancario";
+      case "tigo_money": return "Tigo Money";
+      case "transferencia": return "Transferencia";
+      case "efectivo": return "Efectivo";
+      default: return "No definido";
     }
   };
 
@@ -53,25 +37,10 @@ export default function BookingCard({
       </div>
 
       <div className="space-y-2 text-gray-300">
-        <p>
-          <strong className="text-gray-400">Tipo:</strong>{" "}
-          {booking.room?.type || "Sin tipo"}
-        </p>
-
-        <p>
-          <strong className="text-gray-400">Check In:</strong>{" "}
-          {formatDate(booking.checkIn)}
-        </p>
-
-        <p>
-          <strong className="text-gray-400">Check Out:</strong>{" "}
-          {formatDate(booking.checkOut)}
-        </p>
-
-        <p>
-          <strong className="text-gray-400">Método de pago:</strong>{" "}
-          {getPaymentLabel(booking.paymentMethod)}
-        </p>
+        <p><strong className="text-gray-400">Tipo:</strong> {booking.room?.type || "Sin tipo"}</p>
+        <p><strong className="text-gray-400">Check In:</strong> {formatDate(booking.checkIn)}</p>
+        <p><strong className="text-gray-400">Check Out:</strong> {formatDate(booking.checkOut)}</p>
+        <p><strong className="text-gray-400">Método de pago:</strong> {getPaymentLabel(booking.paymentMethod)}</p>
 
         <p>
           <strong className="text-gray-400">Estado pago:</strong>{" "}
@@ -80,11 +49,23 @@ export default function BookingCard({
           </span>
         </p>
 
+        {payment?.comprobante && (
+          <p>
+            <strong className="text-gray-400">Comprobante:</strong>{" "}
+            <a
+              href={payment.comprobante}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-400 underline"
+            >
+              Ver comprobante
+            </a>
+          </p>
+        )}
+
         <p>
           <strong className="text-gray-400">Total:</strong>{" "}
-          <span className="text-emerald-400 font-bold">
-            Bs. {booking.totalPrice}
-          </span>
+          <span className="text-emerald-400 font-bold">Bs. {booking.totalPrice}</span>
         </p>
       </div>
 

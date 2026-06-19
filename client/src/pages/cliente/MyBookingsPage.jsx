@@ -18,6 +18,8 @@ export default function MyBookingsPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [selectedPaymentBooking, setSelectedPaymentBooking] = useState(null);
+  const [comprobante, setComprobante] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const loadData = async () => {
     try {
@@ -70,11 +72,7 @@ export default function MyBookingsPage() {
 
   const submitReview = async () => {
     try {
-      await bookingAPI.createReview(selectedBooking._id, {
-        rating,
-        comment,
-      });
-
+      await bookingAPI.createReview(selectedBooking._id, { rating, comment });
       toast.success("Calificación enviada");
       closeReviewModal();
       loadData();
@@ -113,6 +111,39 @@ export default function MyBookingsPage() {
     setShowPaymentModal(false);
     setPaymentInfo(null);
     setSelectedPaymentBooking(null);
+    setComprobante(null);
+  };
+
+  const handleUploadComprobante = async () => {
+    const paymentId = paymentInfo?.payment?._id;
+
+    if (!paymentId) {
+      toast.error("No se encontró el pago");
+      return;
+    }
+
+    if (!comprobante) {
+      toast.error("Selecciona una imagen del comprobante");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const formData = new FormData();
+      formData.append("comprobante", comprobante);
+
+      await paymentAPI.uploadComprobante(paymentId, formData);
+
+      toast.success("Comprobante subido correctamente");
+      closePaymentModal();
+      loadData();
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Error al subir comprobante");
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -139,7 +170,6 @@ export default function MyBookingsPage() {
         <div className="space-y-12">
           {groups.map((group) => {
             const items = getByStatus(group.key);
-
             if (items.length === 0) return null;
 
             return (
@@ -262,7 +292,7 @@ export default function MyBookingsPage() {
             {selectedPaymentBooking.paymentMethod === "transferencia" && (
               <div className="bg-blue-50 border border-blue-400 rounded-lg p-4 text-center">
                 <p className="font-bold">Pago por transferencia registrado.</p>
-                <p>Debes subir el comprobante cuando esté habilitado.</p>
+                <p>Sube el comprobante para que el administrador lo verifique.</p>
               </div>
             )}
 
@@ -270,6 +300,32 @@ export default function MyBookingsPage() {
               <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-center">
                 <p className="font-bold">Pago en efectivo pendiente.</p>
                 <p>Paga en recepción para que el administrador confirme la reserva.</p>
+              </div>
+            )}
+
+            {["qr_simple", "tigo_money", "transferencia"].includes(
+              selectedPaymentBooking.paymentMethod
+            ) && (
+              <div className="mt-6 border-2 border-gray-300 rounded-lg p-4">
+                <label className="block font-bold text-gray-800 mb-2">
+                  Subir comprobante
+                </label>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setComprobante(e.target.files[0])}
+                  className="w-full border border-gray-400 p-2 rounded bg-white text-gray-900"
+                />
+
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={handleUploadComprobante}
+                  className="mt-4 w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold disabled:opacity-60"
+                >
+                  {uploading ? "Subiendo..." : "Subir comprobante"}
+                </button>
               </div>
             )}
 
