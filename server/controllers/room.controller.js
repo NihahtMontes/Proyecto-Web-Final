@@ -135,9 +135,22 @@ const createRoom = async (req, res) => {
 
 const updateRoom = async (req, res) => {
   try {
-    const room = await Room.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+    const existingRoom = await Room.findOne({
+      number: req.body.number,
+      _id: { $ne: req.params.id },
     });
+
+    if (existingRoom) {
+      return res.status(400).json({
+        message: "Ya existe una habitación con ese número",
+      });
+    }
+
+    const room = await Room.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
 
     if (!room) {
       return res.status(404).json({
