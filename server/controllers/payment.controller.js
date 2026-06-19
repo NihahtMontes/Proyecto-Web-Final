@@ -12,7 +12,6 @@ const createPayment = async (bookingId, method, userId) => {
   }
 
   const existing = await Payment.findOne({ booking: bookingId });
-
   if (existing) return { booking, payment: existing };
 
   const payment = await Payment.create({
@@ -41,7 +40,10 @@ const generateQR = async (req, res) => {
 
     res.status(201).json({ payment, qrCode: qrDataURL, qrText });
   } catch (error) {
-    res.status(500).json({ message: "Error generando QR", error: error.message });
+    res.status(500).json({
+      message: "Error generando QR",
+      error: error.message,
+    });
   }
 };
 
@@ -64,7 +66,10 @@ const registerTigoMoney = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Error registrando pago Tigo Money", error: error.message });
+    res.status(500).json({
+      message: "Error registrando pago Tigo Money",
+      error: error.message,
+    });
   }
 };
 
@@ -80,13 +85,18 @@ const registerManualPayment = async (req, res) => {
 
     res.status(201).json({ payment });
   } catch (error) {
-    res.status(500).json({ message: "Error registrando pago", error: error.message });
+    res.status(500).json({
+      message: "Error registrando pago",
+      error: error.message,
+    });
   }
 };
 
 const uploadComprobante = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: "No se subió ningún archivo" });
+    if (!req.file) {
+      return res.status(400).json({ message: "No se subió ningún archivo" });
+    }
 
     const payment = await Payment.findById(req.params.id).populate("booking");
 
@@ -95,37 +105,61 @@ const uploadComprobante = async (req, res) => {
     }
 
     const imageUrl = await uploadImage(req.file.buffer);
+
     payment.comprobante = imageUrl;
     await payment.save();
 
     res.json(payment);
   } catch (error) {
-    res.status(500).json({ message: "Error subiendo comprobante", error: error.message });
+    res.status(500).json({
+      message: "Error subiendo comprobante",
+      error: error.message,
+    });
   }
 };
 
 const getMyPayments = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id }).select("_id");
-    const bookingIds = bookings.map((b) => b._id);
+    const bookingIds = bookings.map((booking) => booking._id);
 
-    const payments = await Payment.find({ booking: { $in: bookingIds } }).populate("booking");
+    const payments = await Payment.find({
+      booking: { $in: bookingIds },
+    }).populate("booking");
+
     res.json(payments);
   } catch (error) {
-    res.status(500).json({ message: "Error obteniendo pagos", error: error.message });
+    res.status(500).json({
+      message: "Error obteniendo pagos",
+      error: error.message,
+    });
   }
 };
 
 const getAllPayments = async (req, res) => {
   try {
-    const payments = await Payment.find(req.query).populate({
-      path: "booking",
-      populate: { path: "user room", select: "name email number type" },
-    }).sort("-createdAt");
+    const { status, method } = req.query;
+    const query = {};
+
+    if (status) query.status = status;
+    if (method) query.method = method;
+
+    const payments = await Payment.find(query)
+      .populate({
+        path: "booking",
+        populate: [
+          { path: "user", select: "name email" },
+          { path: "room", select: "number type" },
+        ],
+      })
+      .sort("-createdAt");
 
     res.json(payments);
   } catch (error) {
-    res.status(500).json({ message: "Error obteniendo todos los pagos", error: error.message });
+    res.status(500).json({
+      message: "Error obteniendo todos los pagos",
+      error: error.message,
+    });
   }
 };
 
@@ -134,7 +168,15 @@ const verifyPayment = async (req, res) => {
     const payment = await Payment.findById(req.params.id).populate("booking");
 
     if (!payment || payment.status !== "pendiente") {
-      return res.status(400).json({ message: "Pago no encontrado o ya procesado" });
+      return res.status(400).json({
+        message: "Pago no encontrado o ya procesado",
+      });
+    }
+
+    if (payment.method !== "efectivo" && !payment.comprobante) {
+      return res.status(400).json({
+        message: "No se puede verificar un pago sin comprobante",
+      });
     }
 
     payment.status = "verificado";
@@ -152,18 +194,33 @@ const verifyPayment = async (req, res) => {
 
     res.json(payment);
   } catch (error) {
-    res.status(500).json({ message: "Error verificando pago", error: error.message });
+    res.status(500).json({
+      message: "Error verificando pago",
+      error: error.message,
+    });
   }
 };
 
 const getPaymentById = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id).populate("booking");
-    if (!payment) return res.status(404).json({ message: "Pago no encontrado" });
+    const payment = await Payment.findById(req.params.id).populate({
+      path: "booking",
+      populate: [
+        { path: "user", select: "name email" },
+        { path: "room", select: "number type" },
+      ],
+    });
+
+    if (!payment) {
+      return res.status(404).json({ message: "Pago no encontrado" });
+    }
 
     res.json(payment);
   } catch (error) {
-    res.status(500).json({ message: "Error obteniendo pago", error: error.message });
+    res.status(500).json({
+      message: "Error obteniendo pago",
+      error: error.message,
+    });
   }
 };
 
