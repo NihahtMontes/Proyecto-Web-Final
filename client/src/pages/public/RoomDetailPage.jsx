@@ -21,7 +21,9 @@ export default function RoomDetailPage() {
     loadRoom();
   }, [id]);
 
-  if (!room) return <div className="p-8">Cargando habitación...</div>;
+  if (!room) {
+    return <div className="p-8 text-white">Cargando habitación...</div>;
+  }
 
   const nights =
     startDate && endDate
@@ -47,37 +49,84 @@ export default function RoomDetailPage() {
     });
   };
 
+  const image =
+    room.images?.[0] ||
+    "https://images.unsplash.com/photo-1566073771259-6a8506099945";
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <h1 className="text-4xl font-bold mb-8">Habitación {room.number}</h1>
+      <button
+        onClick={() => navigate("/habitaciones")}
+        className="mb-8 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-lg font-semibold shadow-lg"
+      >
+        ← Volver a habitaciones
+      </button>
 
-      <div className="grid md:grid-cols-3 gap-4 mb-10">
-        {(room.images?.length ? room.images : ["https://images.unsplash.com/photo-1566073771259-6a8506099945"]).map((image, index) => (
-          <img key={index} src={image} alt="Habitación" className="w-full h-64 object-cover rounded-lg shadow" />
-        ))}
-      </div>
+      <h1 className="text-5xl font-bold text-white text-center mb-10">
+        Habitación {room.number}
+      </h1>
 
-      <div className="grid lg:grid-cols-2 gap-10">
+      <div className="grid lg:grid-cols-2 gap-10 items-start">
         <div>
-          <p><b>Tipo:</b> {room.type}</p>
-          <p><b>Capacidad:</b> {room.capacity} personas</p>
-          <p><b>Precio:</b> Bs. {room.pricePerNight} por noche</p>
-          <p className="mt-6">{room.description}</p>
+          <img
+            src={image}
+            alt={`Habitación ${room.number}`}
+            className="w-full h-80 object-cover rounded-xl shadow mb-8"
+          />
+
+          <div className="bg-gray-800 border-2 border-emerald-500 rounded-xl p-8 text-white text-center shadow-xl shadow-emerald-900/30">
+            <p>
+              <b>Tipo:</b> {room.type}
+            </p>
+            <p>
+              <b>Capacidad:</b> {room.capacity} personas
+            </p>
+            <p>
+              <b>Precio:</b> Bs. {room.pricePerNight} por noche
+            </p>
+            <p className="mt-4 text-gray-300">
+              {room.description || "Sin descripción disponible"}
+            </p>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-6">Reservar Habitación</h2>
+        <div className="bg-white rounded-xl border-4 border-emerald-500 shadow-2xl p-8 text-gray-900">
+          <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">
+            Reservar Habitación
+          </h2>
 
-          <label>Check In</label>
-          <DatePicker selected={startDate} onChange={setStartDate} minDate={new Date()} className="w-full border rounded p-2 mb-5" />
+          <label className="block font-semibold mb-2 text-gray-800">
+            Check In
+          </label>
+          <DatePicker
+            selected={startDate}
+            onChange={setStartDate}
+            minDate={new Date()}
+            className="w-full border-2 border-gray-400 text-gray-900 rounded-lg p-3 mb-5 focus:border-emerald-500 focus:outline-none"
+          />
 
-          <label>Check Out</label>
-          <DatePicker selected={endDate} onChange={setEndDate} minDate={startDate || new Date()} className="w-full border rounded p-2 mb-5" />
+          <label className="block font-semibold mb-2 text-gray-800">
+            Check Out
+          </label>
+          <DatePicker
+            selected={endDate}
+            onChange={setEndDate}
+            minDate={startDate || new Date()}
+            className="w-full border-2 border-gray-400 text-gray-900 rounded-lg p-3 mb-5 focus:border-emerald-500 focus:outline-none"
+          />
 
-          <p>Noches: <b>{nights}</b></p>
-          <p className="text-2xl font-bold text-green-600">Total: Bs. {total}</p>
+          <p className="text-gray-800">
+            Noches: <b>{nights}</b>
+          </p>
 
-          <button onClick={handleReserve} className="w-full bg-blue-600 text-white py-3 rounded mt-6">
+          <p className="text-3xl font-bold text-green-600 mt-3">
+            Total: Bs. {total}
+          </p>
+
+          <button
+            onClick={handleReserve}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg mt-8 font-bold"
+          >
             Reservar Ahora
           </button>
         </div>
