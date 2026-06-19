@@ -1,22 +1,31 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { bookingAPI } from "../../services/api";
+import { bookingAPI, paymentAPI } from "../../services/api";
 import BookingCard from "../../components/ui/BookingCard";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import EmptyState from "../../components/ui/EmptyState";
 
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
-  const loadBookings = async () => {
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState(null);
+  const [selectedPaymentBooking, setSelectedPaymentBooking] = useState(null);
+
+  const loadData = async () => {
     try {
-      const response = await bookingAPI.getMyBookings();
-      setBookings(response.data);
+      const bookingsRes = await bookingAPI.getMyBookings();
+      const paymentsRes = await paymentAPI.getMyPayments();
+
+      setBookings(bookingsRes.data);
+      setPayments(paymentsRes.data);
     } catch (error) {
       console.error(error);
       toast.error("Error al cargar reservas");
@@ -26,14 +35,22 @@ export default function MyBookingsPage() {
   };
 
   useEffect(() => {
-    loadBookings();
+    loadData();
   }, []);
+
+  const getPaymentByBooking = (bookingId) =>
+    payments.find((payment) => {
+      const paymentBookingId =
+        typeof payment.booking === "object" ? payment.booking._id : payment.booking;
+
+      return paymentBookingId === bookingId;
+    });
 
   const handleCancel = async (id) => {
     try {
       await bookingAPI.cancel(id);
       toast.success("Reserva cancelada");
-      loadBookings();
+      loadData();
     } catch {
       toast.error("Error al cancelar");
     }
@@ -60,10 +77,42 @@ export default function MyBookingsPage() {
 
       toast.success("Calificación enviada");
       closeReviewModal();
-      loadBookings();
+      loadData();
     } catch {
       toast.error("Error al calificar");
     }
+  };
+
+  const openPaymentModal = async (booking) => {
+    try {
+      setSelectedPaymentBooking(booking);
+
+      let response;
+
+      if (booking.paymentMethod === "qr_simple") {
+        response = await paymentAPI.generateQR({ bookingId: booking._id });
+      } else if (booking.paymentMethod === "tigo_money") {
+        response = await paymentAPI.registerTigoMoney({ bookingId: booking._id });
+      } else {
+        response = await paymentAPI.registerManualPayment({
+          bookingId: booking._id,
+          method: booking.paymentMethod,
+        });
+      }
+
+      setPaymentInfo(response.data);
+      setShowPaymentModal(true);
+      loadData();
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Error al cargar pago");
+    }
+  };
+
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setPaymentInfo(null);
+    setSelectedPaymentBooking(null);
   };
 
   if (loading) return <LoadingSpinner />;
@@ -104,8 +153,10 @@ export default function MyBookingsPage() {
                     <BookingCard
                       key={booking._id}
                       booking={booking}
+                      payment={getPaymentByBooking(booking._id)}
                       onCancel={handleCancel}
                       onReview={() => openReviewModal(booking)}
+                      onPay={() => openPaymentModal(booking)}
                     />
                   ))}
                 </div>
@@ -129,7 +180,7 @@ export default function MyBookingsPage() {
             <select
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
-              className="w-full border-2 border-gray-400 text-gray-900 bg-white p-3 rounded-lg mb-4 focus:border-emerald-500 focus:outline-none"
+              className="w-full border-2 border-gray-400 text-gray-900 bg-white p-3 rounded-lg mb-4"
             >
               <option value={1}>1 estrella</option>
               <option value={2}>2 estrellas</option>
@@ -147,7 +198,7 @@ export default function MyBookingsPage() {
               placeholder="Escribe tu comentario"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full border-2 border-gray-400 text-gray-900 bg-white p-3 rounded-lg mb-5 focus:border-emerald-500 focus:outline-none"
+              className="w-full border-2 border-gray-400 text-gray-900 bg-white p-3 rounded-lg mb-5"
             />
 
             <div className="flex justify-end gap-3">
@@ -167,6 +218,67 @@ export default function MyBookingsPage() {
                 Enviar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showPaymentModal && selectedPaymentBooking && (
+        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 px-4">
+          <div className="bg-white border-4 border-emerald-500 p-7 rounded-xl w-full max-w-lg text-gray-900 shadow-2xl">
+            <h2 className="text-3xl font-extrabold mb-5 text-center text-slate-900">
+              Pago de Reserva
+            </h2>
+
+            <p className="text-center mb-3">
+              <b>Habitación:</b> {selectedPaymentBooking.room?.number}
+            </p>
+
+            <p className="text-center mb-5">
+              <b>Total:</b> Bs. {selectedPaymentBooking.totalPrice}
+            </p>
+
+            {selectedPaymentBooking.paymentMethod === "qr_simple" &&
+              paymentInfo?.qrCode && (
+                <div className="text-center">
+                  <p className="font-bold mb-3">Escanea el QR para pagar</p>
+                  <img
+                    src={paymentInfo.qrCode}
+                    alt="QR de pago"
+                    className="mx-auto max-w-xs border rounded-lg"
+                  />
+                </div>
+              )}
+
+            {selectedPaymentBooking.paymentMethod === "tigo_money" &&
+              paymentInfo?.tigoData && (
+                <div className="bg-emerald-50 border border-emerald-400 rounded-lg p-4">
+                  <p><b>Número:</b> {paymentInfo.tigoData.number}</p>
+                  <p><b>Titular:</b> {paymentInfo.tigoData.holder}</p>
+                  <p><b>Monto:</b> Bs. {paymentInfo.tigoData.amount}</p>
+                  <p><b>Concepto:</b> {paymentInfo.tigoData.concepto}</p>
+                </div>
+              )}
+
+            {selectedPaymentBooking.paymentMethod === "transferencia" && (
+              <div className="bg-blue-50 border border-blue-400 rounded-lg p-4 text-center">
+                <p className="font-bold">Pago por transferencia registrado.</p>
+                <p>Debes subir el comprobante cuando esté habilitado.</p>
+              </div>
+            )}
+
+            {selectedPaymentBooking.paymentMethod === "efectivo" && (
+              <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-center">
+                <p className="font-bold">Pago en efectivo pendiente.</p>
+                <p>Paga en recepción para que el administrador confirme la reserva.</p>
+              </div>
+            )}
+
+            <button
+              onClick={closePaymentModal}
+              className="mt-6 w-full bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg font-bold"
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       )}
