@@ -44,6 +44,13 @@ export default function MyBookingsPage() {
     setShowReviewModal(true);
   };
 
+  const closeReviewModal = () => {
+    setShowReviewModal(false);
+    setSelectedBooking(null);
+    setRating(5);
+    setComment("");
+  };
+
   const submitReview = async () => {
     try {
       await bookingAPI.createReview(selectedBooking._id, {
@@ -52,10 +59,7 @@ export default function MyBookingsPage() {
       });
 
       toast.success("Calificación enviada");
-      setShowReviewModal(false);
-      setSelectedBooking(null);
-      setRating(5);
-      setComment("");
+      closeReviewModal();
       loadBookings();
     } catch {
       toast.error("Error al calificar");
@@ -112,43 +116,53 @@ export default function MyBookingsPage() {
       )}
 
       {showReviewModal && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Calificar Reserva</h2>
+        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 px-4">
+          <div className="bg-white border-4 border-emerald-500 p-7 rounded-xl w-full max-w-md text-gray-900 shadow-2xl">
+            <h2 className="text-3xl font-extrabold mb-5 text-center text-slate-900">
+              Calificar Reserva
+            </h2>
 
-            <label className="block mb-2">Estrellas</label>
+            <label className="block mb-2 text-gray-800 font-bold">
+              Estrellas
+            </label>
 
             <select
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
-              className="w-full border p-2 rounded mb-4"
+              className="w-full border-2 border-gray-400 text-gray-900 bg-white p-3 rounded-lg mb-4 focus:border-emerald-500 focus:outline-none"
             >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-              <option value={4}>4</option>
-              <option value={5}>5</option>
+              <option value={1}>1 estrella</option>
+              <option value={2}>2 estrellas</option>
+              <option value={3}>3 estrellas</option>
+              <option value={4}>4 estrellas</option>
+              <option value={5}>5 estrellas</option>
             </select>
+
+            <label className="block mb-2 text-gray-800 font-bold">
+              Comentario
+            </label>
 
             <textarea
               rows="4"
-              placeholder="Comentario"
+              placeholder="Escribe tu comentario"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full border p-2 rounded mb-4"
+              className="w-full border-2 border-gray-400 text-gray-900 bg-white p-3 rounded-lg mb-5 focus:border-emerald-500 focus:outline-none"
             />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-3">
               <button
-                onClick={() => setShowReviewModal(false)}
-                className="px-4 py-2 border rounded"
+                type="button"
+                onClick={closeReviewModal}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-5 py-3 rounded-lg font-bold"
               >
                 Cancelar
               </button>
 
               <button
+                type="button"
                 onClick={submitReview}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-bold"
               >
                 Enviar
               </button>
