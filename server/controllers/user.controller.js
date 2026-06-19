@@ -48,6 +48,56 @@ const createUser = async (req, res) => {
   }
 };
 
+const updateUser = async (req, res) => {
+  try {
+    const { name, email, phone = "", role, password } = req.body;
+
+    if (!name || !email || !role) {
+      return res.status(400).json({ message: "Nombre, email y rol son obligatorios" });
+    }
+
+    if (!["cliente", "empleado", "admin"].includes(role)) {
+      return res.status(400).json({ message: "Rol inválido" });
+    }
+
+    const emailExists = await User.findOne({
+      email: email.toLowerCase().trim(),
+      _id: { $ne: req.params.id },
+    });
+
+    if (emailExists) {
+      return res.status(400).json({ message: "El correo ya está registrado" });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    user.name = name;
+    user.email = email.toLowerCase().trim();
+    user.phone = phone;
+    user.role = role;
+
+    if (password && password.trim() !== "") {
+      user.password = password;
+    }
+
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error al actualizar usuario", error: error.message });
+  }
+};
+
 const deleteUser = async (req, res) => {
   try {
     if (req.user._id.toString() === req.params.id) {
@@ -66,4 +116,4 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, createUser, deleteUser };
+module.exports = { getUsers, createUser, updateUser, deleteUser };

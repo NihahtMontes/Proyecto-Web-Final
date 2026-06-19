@@ -51,6 +51,7 @@ export const cleaningAPI = {
 export const userAPI = {
   getAll: (params) => api.get("/users", { params }),
   create: (data) => api.post("/users", data),
+  update: (id, data) => api.put(`/users/${id}`, data),
   delete: (id) => api.delete(`/users/${id}`),
 };
 
