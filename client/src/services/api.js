@@ -71,6 +71,7 @@ export const dashboardAPI = {
 export const paymentAPI = {
   generateQR: (data) => api.post("/payments/generate-qr", data),
   registerTigoMoney: (data) => api.post("/payments/tigo-money", data),
+  registerManualPayment: (data) => api.post("/payments/manual", data),
   uploadComprobante: (id, data) =>
     api.post(`/payments/${id}/comprobante`, data),
   getMyPayments: () => api.get("/payments/me"),
