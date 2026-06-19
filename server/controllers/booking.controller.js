@@ -31,12 +31,12 @@ const createBooking = async (req, res) => {
       });
     }
 
-    const overlappingBooking = await Booking.findOne({
-      room: roomId,
-      status: { $in: ["confirmada", "en_curso"] },
-      checkIn: { $lt: outDate },
-      checkOut: { $gt: inDate },
-    });
+  const overlappingBooking = await Booking.findOne({
+  room: roomId,
+  status: { $in: ["pendiente", "confirmada", "en_curso"] },
+  checkIn: { $lt: outDate },
+  checkOut: { $gt: inDate },
+});
 
     if (overlappingBooking) {
       return res.status(400).json({
