@@ -23,6 +23,7 @@ export const authAPI = {
 export const roomAPI = {
   getAll: (params) => api.get("/rooms", { params }),
   getAvailable: (params) => api.get("/rooms/available", { params }),
+  getOccupiedDates: (id) => api.get(`/rooms/${id}/occupied-dates`),
   getById: (id) => api.get(`/rooms/${id}`),
   create: (data) => api.post("/rooms", data),
   update: (id, data) => api.put(`/rooms/${id}`, data),
@@ -70,7 +71,8 @@ export const dashboardAPI = {
 export const paymentAPI = {
   generateQR: (data) => api.post("/payments/generate-qr", data),
   registerTigoMoney: (data) => api.post("/payments/tigo-money", data),
-  uploadComprobante: (id, data) => api.post(`/payments/${id}/comprobante`, data),
+  uploadComprobante: (id, data) =>
+    api.post(`/payments/${id}/comprobante`, data),
   getMyPayments: () => api.get("/payments/me"),
   getAll: (params) => api.get("/payments", { params }),
   verify: (id) => api.post(`/payments/${id}/verify`),

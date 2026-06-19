@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import toast from "react-hot-toast";
 import { roomAPI } from "../../services/api";
 
 export default function RoomDetailPage() {
@@ -9,13 +10,22 @@ export default function RoomDetailPage() {
   const navigate = useNavigate();
 
   const [room, setRoom] = useState(null);
+  const [occupiedDates, setOccupiedDates] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
   useEffect(() => {
     const loadRoom = async () => {
-      const res = await roomAPI.getById(id);
-      setRoom(res.data);
+      try {
+        const roomRes = await roomAPI.getById(id);
+        const occupiedRes = await roomAPI.getOccupiedDates(id);
+
+        setRoom(roomRes.data);
+        setOccupiedDates(occupiedRes.data.map((date) => new Date(date)));
+      } catch (error) {
+        console.error(error);
+        toast.error("Error al cargar habitación");
+      }
     };
 
     loadRoom();
@@ -27,14 +37,25 @@ export default function RoomDetailPage() {
 
   const nights =
     startDate && endDate
-      ? Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))
+      ? Math.max(
+          1,
+          Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
+        )
       : 0;
 
   const total = nights * Number(room.pricePerNight || 0);
 
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+
+    if (endDate && date >= endDate) {
+      setEndDate(null);
+    }
+  };
+
   const handleReserve = () => {
     if (!startDate || !endDate) {
-      alert("Debe seleccionar Check In y Check Out.");
+      toast.error("Debe seleccionar Check In y Check Out");
       return;
     }
 
@@ -78,12 +99,15 @@ export default function RoomDetailPage() {
             <p>
               <b>Tipo:</b> {room.type}
             </p>
+
             <p>
               <b>Capacidad:</b> {room.capacity} personas
             </p>
+
             <p>
               <b>Precio:</b> Bs. {room.pricePerNight} por noche
             </p>
+
             <p className="mt-4 text-gray-300">
               {room.description || "Sin descripción disponible"}
             </p>
@@ -91,27 +115,38 @@ export default function RoomDetailPage() {
         </div>
 
         <div className="bg-white rounded-xl border-4 border-emerald-500 shadow-2xl p-8 text-gray-900">
-          <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">
+          <h2
+            className="text-3xl font-extrabold mb-6 text-center"
+            style={{ color: "#111827" }}
+          >
             Reservar Habitación
           </h2>
 
           <label className="block font-semibold mb-2 text-gray-800">
             Check In
           </label>
+
           <DatePicker
             selected={startDate}
-            onChange={setStartDate}
+            onChange={handleStartDateChange}
             minDate={new Date()}
+            excludeDates={occupiedDates}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="Selecciona fecha de ingreso"
             className="w-full border-2 border-gray-400 text-gray-900 rounded-lg p-3 mb-5 focus:border-emerald-500 focus:outline-none"
           />
 
           <label className="block font-semibold mb-2 text-gray-800">
             Check Out
           </label>
+
           <DatePicker
             selected={endDate}
             onChange={setEndDate}
             minDate={startDate || new Date()}
+            excludeDates={occupiedDates}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="Selecciona fecha de salida"
             className="w-full border-2 border-gray-400 text-gray-900 rounded-lg p-3 mb-5 focus:border-emerald-500 focus:outline-none"
           />
 
@@ -121,6 +156,10 @@ export default function RoomDetailPage() {
 
           <p className="text-3xl font-bold text-green-600 mt-3">
             Total: Bs. {total}
+          </p>
+
+          <p className="text-sm text-gray-500 mt-3">
+            Las fechas ocupadas aparecen deshabilitadas en el calendario.
           </p>
 
           <button

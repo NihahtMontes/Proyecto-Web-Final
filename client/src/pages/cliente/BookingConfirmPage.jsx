@@ -23,11 +23,17 @@ export default function BookingConfirmPage() {
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 1;
-    return Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)));
+    return Math.max(
+      1,
+      Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))
+    );
   }, [checkIn, checkOut]);
 
   const basePrice = Number(room?.pricePerNight || 0) * nights;
-  const servicesPrice = selectedServices.reduce((sum, s) => sum + Number(s.price || 0), 0);
+  const servicesPrice = selectedServices.reduce(
+    (sum, service) => sum + Number(service.price || 0),
+    0
+  );
   const total = basePrice + servicesPrice;
 
   const toggleService = (service) => {
@@ -62,43 +68,108 @@ export default function BookingConfirmPage() {
     }
   };
 
-  if (!room) return <div className="p-8">No hay datos de reserva.</div>;
+  if (!room) {
+    return (
+      <div className="max-w-4xl mx-auto p-8 text-center">
+        <p className="text-white text-xl mb-5">No hay datos de reserva.</p>
+        <button
+          onClick={() => navigate("/habitaciones")}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-lg font-bold"
+        >
+          Volver a habitaciones
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Confirmar Reserva</h1>
+    <div className="max-w-4xl mx-auto p-6">
+      <button
+        onClick={() => navigate("/habitaciones")}
+        className="mb-6 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-lg font-semibold"
+      >
+        ← Volver a habitaciones
+      </button>
 
-      <div className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-2xl font-bold">Habitación {room.number}</h2>
-        <p>Noches: {nights}</p>
-        <p>Base: Bs. {basePrice}</p>
+      <h1 className="text-5xl font-bold text-white text-center mb-10">
+        Confirmar Reserva
+      </h1>
 
-        <h3 className="font-bold mt-5 mb-3">Servicios adicionales</h3>
-        {services.map((service) => (
-          <label key={service._id} className="block border p-3 rounded mb-2">
-            <input
-              type="checkbox"
-              className="mr-2"
-              checked={selectedServices.some((s) => s._id === service._id)}
-              onChange={() => toggleService(service)}
-            />
-            {service.name} - Bs. {service.price}
-          </label>
-        ))}
+      <div className="bg-white border-4 border-emerald-500 shadow-2xl rounded-xl p-8">
+        <h2
+          className="text-3xl font-extrabold text-center mb-4 bg-emerald-200 py-3 rounded-lg"
+          style={{ color: "#0f172a" }}
+        >
+          Habitación {room.number}
+        </h2>
 
-        <h3 className="font-bold mt-5 mb-3">Método de pago</h3>
-        <select className="border p-3 rounded w-full" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+        <div className="text-center mb-6 font-medium" style={{ color: "#0f172a" }}>
+          <p className="text-xl">
+            <b>Noches:</b> {nights}
+          </p>
+          <p className="text-xl mt-2">
+            <b>Base:</b> Bs. {basePrice}
+          </p>
+        </div>
+
+        <h3 className="text-2xl font-bold mt-8 mb-4 text-black text-center">
+          Servicios adicionales
+        </h3>
+
+        <div className="grid gap-3">
+          {services.map((service) => (
+            <label
+              key={service._id}
+              className="flex items-center gap-3 border-2 border-gray-300 p-4 rounded-lg text-black hover:border-emerald-500 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selectedServices.some((s) => s._id === service._id)}
+                onChange={() => toggleService(service)}
+              />
+              <span className="font-medium">
+                {service.name} - Bs. {service.price}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <h3 className="text-2xl font-bold mt-8 mb-4 text-black text-center">
+          Método de pago
+        </h3>
+
+        <select
+          className="border-2 border-emerald-500 text-black p-4 rounded-lg w-full bg-white font-medium"
+          value={paymentMethod}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+        >
           <option value="qr_simple">QR Bancario</option>
           <option value="tigo_money">Tigo Money</option>
           <option value="transferencia">Transferencia</option>
           <option value="efectivo">Efectivo</option>
         </select>
 
-        <p className="text-2xl font-bold text-blue-600 mt-5">Total: Bs. {total}</p>
+        <p className="text-5xl font-extrabold text-blue-600 mt-6 text-center">
+          Total: Bs. {total}
+        </p>
 
-        <button disabled={loading} onClick={handleConfirm} className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg">
-          {loading ? "Procesando..." : "Confirmar Reserva"}
-        </button>
+        <div className="flex flex-col md:flex-row gap-4 mt-8">
+          <button
+            type="button"
+            onClick={() => navigate("/habitaciones")}
+            className="w-full bg-slate-700 hover:bg-slate-600 text-white py-4 rounded-lg font-bold"
+          >
+            Cancelar
+          </button>
+
+          <button
+            disabled={loading}
+            onClick={handleConfirm}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-lg font-bold disabled:opacity-60"
+          >
+            {loading ? "Procesando..." : "Confirmar Reserva"}
+          </button>
+        </div>
       </div>
     </div>
   );
