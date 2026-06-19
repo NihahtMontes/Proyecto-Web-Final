@@ -12,8 +12,7 @@ export default function HomePage() {
   const popularRooms = [
     {
       _id: 1,
-      image:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
       number: "101",
       type: "Simple",
       pricePerNight: 250,
@@ -22,8 +21,7 @@ export default function HomePage() {
     },
     {
       _id: 2,
-      image:
-        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b",
+      image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b",
       number: "202",
       type: "Doble",
       pricePerNight: 400,
@@ -32,8 +30,7 @@ export default function HomePage() {
     },
     {
       _id: 3,
-      image:
-        "https://images.unsplash.com/photo-1590490360182-c33d57733427",
+      image: "https://images.unsplash.com/photo-1590490360182-c33d57733427",
       number: "303",
       type: "Suite",
       pricePerNight: 800,
@@ -42,8 +39,7 @@ export default function HomePage() {
     },
     {
       _id: 4,
-      image:
-        "https://images.unsplash.com/photo-1578683010236-d716f9a3f461",
+      image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461",
       number: "404",
       type: "Suite Premium",
       pricePerNight: 1200,
@@ -53,110 +49,71 @@ export default function HomePage() {
   ];
 
   const services = [
-    {
-      icon: <FaWifi size={40} />,
-      title: "WiFi Gratis",
-    },
-    {
-      icon: <FaUtensils size={40} />,
-      title: "Restaurante",
-    },
-    {
-      icon: <FaSwimmingPool size={40} />,
-      title: "Piscina",
-    },
-    {
-      icon: <FaBed size={40} />,
-      title: "Habitaciones Premium",
-    },
+    { icon: <FaWifi size={46} />, title: "WiFi Gratis" },
+    { icon: <FaUtensils size={46} />, title: "Restaurante" },
+    { icon: <FaSwimmingPool size={46} />, title: "Piscina" },
+    { icon: <FaBed size={46} />, title: "Habitaciones Premium" },
   ];
 
   return (
     <div>
-
-      {/* HERO */}
-
-      <section className="bg-blue-600 text-white py-20">
-
+      <section className="bg-blue-600 text-white py-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
-
           <h1 className="text-5xl font-bold mb-6">
             Bienvenido a ByteHotel
           </h1>
 
-          <p className="text-xl mb-8">
+          <p className="text-2xl mb-8">
             Reserva tu habitación de forma rápida y segura.
           </p>
 
           <Link
             to="/habitaciones"
-            className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold"
+            className="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100"
           >
             Ver Habitaciones
           </Link>
-
         </div>
-
       </section>
 
-      {/* SERVICIOS */}
-
       <section className="py-16">
-
         <div className="max-w-7xl mx-auto px-6">
-
-          <h2 className="text-3xl font-bold text-center mb-10">
+          <h2 className="text-3xl font-bold text-white text-center mb-10">
             Nuestros Servicios
           </h2>
 
           <div className="grid md:grid-cols-4 gap-6">
-
             {services.map((service, index) => (
               <div
                 key={index}
-                className="bg-white p-6 rounded-lg shadow text-center"
+                className="bg-white p-8 rounded-xl shadow text-center min-h-[180px] flex flex-col justify-center"
               >
-                <div className="flex justify-center mb-4 text-blue-600">
+                <div className="flex justify-center mb-5 text-blue-600">
                   {service.icon}
                 </div>
 
-                <h3 className="font-semibold">
+                <h3 className="font-bold text-xl text-gray-900">
                   {service.title}
                 </h3>
               </div>
             ))}
-
           </div>
-
         </div>
-
       </section>
 
-      {/* HABITACIONES POPULARES */}
-
       <section className="pb-16">
-
         <div className="max-w-7xl mx-auto px-6">
-
-          <h2 className="text-3xl font-bold text-center mb-10">
+          <h2 className="text-3xl font-bold text-white text-center mb-10">
             Habitaciones Populares
           </h2>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-
             {popularRooms.map((room) => (
-              <RoomCard
-                key={room._id}
-                room={room}
-              />
+              <RoomCard key={room._id} room={room} />
             ))}
-
           </div>
-
         </div>
-
       </section>
-
     </div>
   );
 }
